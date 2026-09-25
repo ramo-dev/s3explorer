@@ -9,14 +9,14 @@ export function DropOverlay({ isDragActive }: DropOverlayProps) {
 
     return (
         <div
-            className="fixed inset-0 z-[60] flex items-center justify-center pointer-events-none"
+            className="fixed inset-0 z-60 flex items-center justify-center pointer-events-none"
             role="status"
             aria-live="polite"
             aria-label="Drop files to upload"
         >
             <div className="absolute inset-4 border-2 border-dashed border-accent-pink rounded-lg bg-background/90" aria-hidden="true" />
             <div className="relative text-center">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-accent-purple to-accent-pink flex items-center justify-center mx-auto mb-4">
                     <Upload className="w-8 h-8 text-white" aria-hidden="true" />
                 </div>
                 <p className="text-base font-medium">Drop to upload</p>

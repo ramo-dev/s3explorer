@@ -59,7 +59,7 @@ export function WelcomeMessage({ onConfigure }: WelcomeMessageProps) {
         </button>
 
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-accent-purple/10 flex items-center justify-center flex-shrink-0 group-hover:bg-accent-purple/20 transition-colors">
+          <div className="w-10 h-10 rounded-lg bg-accent-purple/10 flex items-center justify-center shrink-0 group-hover:bg-accent-purple/20 transition-colors">
             <img
               src="/logo.svg"
               alt=""

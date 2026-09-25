@@ -64,12 +64,12 @@ export function Header({
     };
 
     return (
-        <header className="h-14 flex items-center justify-between px-2 sm:pl-4 sm:pr-2 border-b border-border bg-background-secondary/50 flex-shrink-0 relative" role="banner">
+        <header className="h-14 flex items-center justify-between px-2 sm:pl-4 sm:pr-2 border-b border-border bg-background-secondary/50 shrink-0 relative" role="banner">
             {/* Left Section - Navigation */}
             <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1 sm:flex-none sm:max-w-[280px] z-10">
                 <button
                     onClick={onOpenSidebar}
-                    className="btn btn-ghost btn-icon md:hidden flex-shrink-0 w-10 h-10 sm:w-9 sm:h-9"
+                    className="btn btn-ghost btn-icon md:hidden shrink-0 w-10 h-10 sm:w-9 sm:h-9"
                     aria-label="Open sidebar menu"
                 >
                     <Menu className="w-5 h-5" aria-hidden="true" />
@@ -78,7 +78,7 @@ export function Header({
                 {currentPath && (
                     <button
                         onClick={onGoBack}
-                        className="btn btn-ghost btn-icon flex-shrink-0 w-10 h-10 sm:w-9 sm:h-9 rounded-full"
+                        className="btn btn-ghost btn-icon shrink-0 w-10 h-10 sm:w-9 sm:h-9 rounded-full"
                         aria-label="Go back to parent folder"
                     >
                         <ChevronLeft className="w-5 h-5" aria-hidden="true" />
@@ -88,7 +88,7 @@ export function Header({
                 <nav className="flex items-center gap-1 text-sm min-w-0 overflow-hidden" aria-label="Breadcrumb navigation">
                     <button
                         onClick={onNavigateToRoot}
-                        className={`flex-shrink-0 truncate max-w-[100px] sm:max-w-none ${hideBucketCrumb ? 'hidden' : ''} ${currentPath ? 'text-foreground-muted hover:text-foreground' : 'font-medium'}`}
+                        className={`shrink-0 truncate max-w-[100px] sm:max-w-none ${hideBucketCrumb ? 'hidden' : ''} ${currentPath ? 'text-foreground-muted hover:text-foreground' : 'font-medium'}`}
                         title={selectedBucket || undefined}
                         aria-label={selectedBucket ? `Navigate to bucket root: ${selectedBucket}` : 'Select bucket'}
                         aria-current={!currentPath ? 'page' : undefined}
@@ -97,7 +97,7 @@ export function Header({
                     </button>
 
                     {showEllipsis && (
-                        <span className="flex items-center gap-1 text-foreground-muted flex-shrink-0" aria-hidden="true">
+                        <span className="flex items-center gap-1 text-foreground-muted shrink-0" aria-hidden="true">
                             {!hideBucketCrumb && <span>/</span>}
                             <span>…</span>
                         </span>
@@ -108,7 +108,7 @@ export function Header({
                         const isLast = actualIndex === breadcrumbs.length - 1;
                         return (
                             <span key={actualIndex} className="flex items-center gap-1 min-w-0">
-                                {(i > 0 || showEllipsis || !hideBucketCrumb) && <span className="text-foreground-muted flex-shrink-0" aria-hidden="true">/</span>}
+                                {(i > 0 || showEllipsis || !hideBucketCrumb) && <span className="text-foreground-muted shrink-0" aria-hidden="true">/</span>}
                                 <button
                                     onClick={() => onNavigateToBreadcrumb(actualIndex)}
                                     className={`truncate max-w-[60px] sm:max-w-none ${isLast ? 'font-medium' : 'text-foreground-muted hover:text-foreground'}`}
@@ -132,7 +132,7 @@ export function Header({
                         className="flex items-center gap-1.5 px-2.5 py-1 text-sm text-foreground-muted hover:text-foreground bg-background-tertiary hover:bg-background-hover border border-border hover:border-border-hover rounded-md transition-all w-[170px]"
                         aria-label={`Open command palette (${isMac ? 'Cmd' : 'Ctrl'}+K)`}
                     >
-                        <Search className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
+                        <Search className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                         <span className="text-xs">Search...</span>
                         <kbd className="flex items-center gap-0.5 px-1 py-0.5 text-xs font-medium bg-background border border-border rounded ml-auto" aria-hidden="true">
                             <span>{isMac ? '⌘' : 'Ctrl'}</span>
@@ -143,7 +143,7 @@ export function Header({
             )}
 
             {/* Right Section - Actions */}
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 z-10" role="toolbar" aria-label="File actions">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 z-10" role="toolbar" aria-label="File actions">
                 {selectedBucket && (
                     <>
                         <button

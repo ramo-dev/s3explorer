@@ -205,7 +205,7 @@ export function FilePreviewModal({ object, bucket, onClose, onDownload, objects,
                 }
                 return (
                     <div className="w-full h-full overflow-auto bg-background rounded border border-border">
-                        <pre className="text-xs font-mono text-foreground whitespace-pre-wrap break-words p-4 leading-relaxed">{textContent}</pre>
+                        <pre className="text-xs font-mono text-foreground whitespace-pre-wrap wrap-break-word p-4 leading-relaxed">{textContent}</pre>
                     </div>
                 );
 
@@ -224,7 +224,7 @@ export function FilePreviewModal({ object, bucket, onClose, onDownload, objects,
 
     return (
         <div
-            className="fixed inset-0 z-[60] flex flex-col bg-black/85 backdrop-blur-sm"
+            className="fixed inset-0 z-60 flex flex-col bg-black/85 backdrop-blur-xs"
             onClick={onClose}
             role="dialog"
             aria-modal="true"
@@ -232,21 +232,21 @@ export function FilePreviewModal({ object, bucket, onClose, onDownload, objects,
         >
             {/* Header */}
             <div
-                className="flex items-center justify-between px-3 sm:px-4 py-2 bg-background-secondary border-b border-border flex-shrink-0"
+                className="flex items-center justify-between px-3 sm:px-4 py-2 bg-background-secondary border-b border-border shrink-0"
                 onClick={e => e.stopPropagation()}
             >
                 <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                     <h3 className="text-sm font-medium truncate text-foreground">{fileName}</h3>
                     {activeObject.size > 0 && (
-                        <span className="text-xs text-foreground-muted flex-shrink-0 hidden sm:inline">{formatBytes(activeObject.size)}</span>
+                        <span className="text-xs text-foreground-muted shrink-0 hidden sm:inline">{formatBytes(activeObject.size)}</span>
                     )}
                     {isMulti && (
-                        <span className="text-xs text-foreground-muted flex-shrink-0 tabular-nums">
+                        <span className="text-xs text-foreground-muted shrink-0 tabular-nums">
                             {currentIndex + 1}/{totalCount}
                         </span>
                     )}
                 </div>
-                <div className="flex items-center gap-0.5 flex-shrink-0">
+                <div className="flex items-center gap-0.5 shrink-0">
                     {/* Zoom controls - images only */}
                     {previewType === 'image' && imageLoaded && (
                         <>
@@ -307,7 +307,7 @@ export function FilePreviewModal({ object, bucket, onClose, onDownload, objects,
             {/* Bottom bar for multi-file mode */}
             {isMulti && (
                 <div
-                    className="flex items-center justify-center gap-4 px-3 py-2 bg-background-secondary border-t border-border flex-shrink-0"
+                    className="flex items-center justify-center gap-4 px-3 py-2 bg-background-secondary border-t border-border shrink-0"
                     onClick={e => e.stopPropagation()}
                 >
                     <button onClick={goToPrev} disabled={!hasPrev} className="text-xs text-foreground-secondary hover:text-foreground disabled:opacity-30 transition-colors flex items-center gap-1">

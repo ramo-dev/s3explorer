@@ -54,7 +54,7 @@ export function SetupPage({ onSetupComplete }: SetupPageProps) {
     ];
 
     return (
-        <div className="min-h-[100dvh] flex flex-col items-center bg-background px-4 py-8 sm:px-6 lg:px-8 overflow-y-auto">
+        <div className="min-h-dvh flex flex-col items-center bg-background px-4 py-8 sm:px-6 lg:px-8 overflow-y-auto">
 
             <div className="flex-1 w-full flex flex-col items-center justify-center max-w-md space-y-8">
                 {/* Header */}
@@ -112,7 +112,7 @@ export function SetupPage({ onSetupComplete }: SetupPageProps) {
                                     { label: 'At least 32 characters', valid: sessionSecret.length >= 32 },
                                 ].map((req, i) => (
                                     <div key={i} className="flex items-center gap-2 text-sm">
-                                        <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ${req.valid ? 'bg-accent-green/20 text-accent-green' : 'bg-background-tertiary text-foreground-muted'
+                                        <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${req.valid ? 'bg-accent-green/20 text-accent-green' : 'bg-background-tertiary text-foreground-muted'
                                             }`}>
                                             {req.valid && <Check className="w-2.5 h-2.5" />}
                                         </div>
@@ -185,7 +185,7 @@ export function SetupPage({ onSetupComplete }: SetupPageProps) {
                             <div className="grid grid-cols-1 gap-1.5">
                                 {requirements.map((req, i) => (
                                     <div key={i} className="flex items-center gap-2 text-sm">
-                                        <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ${req.valid ? 'bg-accent-green/20 text-accent-green' : 'bg-background-tertiary text-foreground-muted'
+                                        <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${req.valid ? 'bg-accent-green/20 text-accent-green' : 'bg-background-tertiary text-foreground-muted'
                                             }`}>
                                             {req.valid && <Check className="w-2.5 h-2.5" />}
                                         </div>
@@ -199,7 +199,7 @@ export function SetupPage({ onSetupComplete }: SetupPageProps) {
 
                         {error && (
                             <div className="p-3 rounded-md bg-accent-red/10 border border-accent-red/20 text-accent-red text-sm flex items-center gap-2" role="alert">
-                                <AlertCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+                                <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
                                 {error}
                             </div>
                         )}

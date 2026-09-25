@@ -114,7 +114,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
 
               {error && (
                 <div id="login-error" className="p-3 rounded-md bg-accent-red/10 border border-accent-red/20 text-accent-red text-sm flex items-center gap-2" role="alert">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+                  <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
                   {error}
                 </div>
               )}

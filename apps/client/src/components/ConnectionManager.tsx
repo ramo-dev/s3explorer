@@ -353,7 +353,7 @@ export function ConnectionManager({ isOpen, onClose, onConnectionChange }: Conne
     <>
       {/* Delete Confirmation Overlay - Full screen */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-[100] modal-backdrop flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-100 modal-backdrop flex items-center justify-center p-4">
           <div className="bg-background-secondary border border-border rounded-lg p-5 max-w-sm w-full shadow-2xl animate-scaleIn">
             <h3 className="text-lg font-semibold text-foreground mb-3">Delete Connection</h3>
             <p className="text-sm text-foreground-secondary mb-6">
@@ -382,14 +382,14 @@ export function ConnectionManager({ isOpen, onClose, onConnectionChange }: Conne
         <div className="relative flex flex-col">
 
           {error && (
-            <div className="mb-4 p-3 bg-accent-red/15 rounded-md text-accent-red text-[13px] flex items-center gap-2 animate-fadeIn">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <div className="mb-4 p-3 bg-accent-red/15 rounded-md text-accent-red text-[13px] flex items-center gap-2 animate-fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0" />
               {error}
             </div>
           )}
 
           {view === 'list' ? (
-            <div className="animate-fadeIn">
+            <div className="animate-fade-in">
               <div className="space-y-2">
                 {loading ? (
                   <div className="flex items-center justify-center py-8 text-foreground-muted">
@@ -407,14 +407,14 @@ export function ConnectionManager({ isOpen, onClose, onConnectionChange }: Conne
                     <div
                       key={conn.id}
                       onClick={() => handleActivate(conn.id)}
-                      className={`group relative flex items-center justify-between p-3 !rounded-md bg-background-tertiary transition-all cursor-pointer overflow-hidden ${conn.isActive ? 'ring-1 ring-accent-purple' : 'hover:bg-accent-purple/5'
+                      className={`group relative flex items-center justify-between p-3 rounded-md! bg-background-tertiary transition-all cursor-pointer overflow-hidden ${conn.isActive ? 'ring-1 ring-accent-purple' : 'hover:bg-accent-purple/5'
                         }`}
                     >
                       {/* Left accent border */}
                       <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-lg transition-colors ${conn.isActive ? 'bg-accent-purple' : 'bg-transparent group-hover:bg-accent-purple/50'}`} />
 
                       <div className="flex items-center gap-3 min-w-0 pl-2 flex-1">
-                        <div className={`w-9 h-9 rounded-md flex-shrink-0 flex items-center justify-center transition-colors ${conn.isActive ? 'bg-accent-purple/20 text-accent-purple' : 'bg-background-hover text-foreground-muted group-hover:bg-accent-purple/10 group-hover:text-accent-purple'
+                        <div className={`w-9 h-9 rounded-md shrink-0 flex items-center justify-center transition-colors ${conn.isActive ? 'bg-accent-purple/20 text-accent-purple' : 'bg-background-hover text-foreground-muted group-hover:bg-accent-purple/10 group-hover:text-accent-purple'
                           }`}>
                           <Server className="w-4 h-4" />
                         </div>
@@ -436,7 +436,7 @@ export function ConnectionManager({ isOpen, onClose, onConnectionChange }: Conne
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1 flex-shrink-0">
+                      <div className="flex items-center gap-1 shrink-0">
                         <button
                           onClick={(e) => startEdit(e, conn)}
                           className="p-1.5 text-foreground-muted hover:text-accent-purple rounded transition-colors"
@@ -666,9 +666,9 @@ export function ConnectionManager({ isOpen, onClose, onConnectionChange }: Conne
                     aria-live="polite"
                   >
                     {testResult.success ? (
-                      <Check className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+                      <Check className="w-4 h-4 shrink-0" aria-hidden="true" />
                     ) : (
-                      <AlertCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+                      <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
                     )}
                     {testResult.message}
                   </div>

@@ -40,7 +40,7 @@ function SelectCheckbox({ checked, onChange, ariaLabel }: { checked: boolean; on
     return (
         <button
             onClick={(e) => { e.stopPropagation(); onChange(); }}
-            className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${checked
+            className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-colors ${checked
                 ? 'bg-accent-purple border-accent-purple text-white'
                 : 'border-border hover:border-foreground-muted'
                 }`}
@@ -106,7 +106,7 @@ const FileRow = memo(({ index, style, data }: RowProps) => {
 
             {/* Name column */}
             <div className="flex-1 min-w-0 flex items-center gap-2 px-2 sm:px-3">
-                <span className={`file-icon flex-shrink-0 ${obj.isFolder ? 'text-accent-pink' : 'text-foreground-muted'}`} aria-hidden="true">
+                <span className={`file-icon shrink-0 ${obj.isFolder ? 'text-accent-pink' : 'text-foreground-muted'}`} aria-hidden="true">
                     {getFileIcon(obj.key, obj.isFolder)}
                 </span>
                 <span className="file-name truncate text-xs" title={fileName}>
@@ -182,7 +182,7 @@ function StandardRow({ obj, onNavigate, onContextMenu, onItemSelect, isSelected,
             </td>
             <td className="py-1.5 sm:py-2">
                 <div className="flex items-center gap-2">
-                    <span className={`file-icon flex-shrink-0 ${obj.isFolder ? 'text-accent-pink' : 'text-foreground-muted'}`} aria-hidden="true">
+                    <span className={`file-icon shrink-0 ${obj.isFolder ? 'text-accent-pink' : 'text-foreground-muted'}`} aria-hidden="true">
                         {getFileIcon(obj.key, obj.isFolder)}
                     </span>
                     <div className="min-w-0 flex-1">
@@ -195,11 +195,11 @@ function StandardRow({ obj, onNavigate, onContextMenu, onItemSelect, isSelected,
                 </div>
             </td>
 
-            <td className="text-foreground-muted text-xs hidden sm:table-cell !text-center !px-2 whitespace-nowrap" style={{ fontVariantNumeric: 'tabular-nums' }}>
+            <td className="text-foreground-muted text-xs hidden sm:table-cell text-center! px-2! whitespace-nowrap" style={{ fontVariantNumeric: 'tabular-nums' }}>
                 {obj.isFolder ? '—' : formatBytes(obj.size)}
             </td>
 
-            <td className="text-foreground-muted text-xs hidden md:table-cell !text-center !px-2 whitespace-nowrap" style={{ fontVariantNumeric: 'tabular-nums' }}>
+            <td className="text-foreground-muted text-xs hidden md:table-cell text-center! px-2! whitespace-nowrap" style={{ fontVariantNumeric: 'tabular-nums' }}>
                 {obj.isFolder ? '—' : obj.lastModified ? <time dateTime={obj.lastModified}>{formatDate(obj.lastModified)}</time> : '—'}
             </td>
 
@@ -242,7 +242,7 @@ export function FileTable({ objects, loading, selectedKeys, onNavigate, onContex
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
-            window.removeEventListener('blur', handleBlur);
+            window.removeEventListener('blur-sm', handleBlur);
         };
     }, []);
 
@@ -379,10 +379,10 @@ export function FileTable({ objects, loading, selectedKeys, onNavigate, onContex
                         <th scope="col">
                             <SortButton field="name" label="Name" {...sortProps} />
                         </th>
-                        <th scope="col" className="w-[72px] hidden sm:table-cell !text-center !px-2">
+                        <th scope="col" className="w-[72px] hidden sm:table-cell text-center! px-2!">
                             <SortButton field="size" label="Size" {...sortProps} className="justify-center w-full" />
                         </th>
-                        <th scope="col" className="w-[88px] hidden md:table-cell !text-center !px-2">
+                        <th scope="col" className="w-[88px] hidden md:table-cell text-center! px-2!">
                             <SortButton field="lastModified" label="Modified" {...sortProps} className="justify-center w-full" />
                         </th>
                         <th scope="col" className="w-12 sm:w-14"><span className="sr-only">Actions</span></th>

@@ -29,7 +29,7 @@ export function BatchActionsBar({
         : downloadMode === 'zip' ? 'Download .zip' : 'Download';
 
     return (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 mb-safe animate-slideUp">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 mb-safe animate-slide-up">
             <div className="flex items-center gap-px bg-border rounded-lg shadow-lg overflow-hidden">
                 <span className="text-xs font-medium text-foreground-secondary px-3 py-2 bg-background-secondary whitespace-nowrap">
                     {selectedCount} selected

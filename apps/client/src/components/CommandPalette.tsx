@@ -230,13 +230,13 @@ export function CommandPalette({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] p-4 command-palette-backdrop animate-fadeIn" onClick={onClose}>
+    <div className="fixed inset-0 z-100 flex items-start justify-center pt-[15vh] p-4 command-palette-backdrop animate-fade-in" onClick={onClose}>
       <div
         className="w-full max-w-lg bg-background-secondary border border-border rounded-lg shadow-2xl overflow-hidden command-palette-content"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
-          <Search className="w-5 h-5 text-foreground-muted flex-shrink-0" />
+          <Search className="w-5 h-5 text-foreground-muted shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -278,7 +278,7 @@ export function CommandPalette({
                       onClick={action.onSelect}
                       onMouseEnter={() => setSelectedIndex(itemIndex)}
                     >
-                      <action.icon className={`w-4 h-4 flex-shrink-0 ${isSelected ? 'text-accent-pink' : ''}`} />
+                      <action.icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-accent-pink' : ''}`} />
                       <span className="flex-1 text-sm font-medium truncate">{action.label}</span>
                       {action.shortcut && (
                         <kbd className="px-1.5 py-0.5 text-xs font-medium text-foreground-muted bg-background-tertiary border border-border rounded">
