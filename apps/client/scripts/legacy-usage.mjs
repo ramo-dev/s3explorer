@@ -65,6 +65,12 @@ const legacyTokens = [...themeTokenNames]
   .filter((t) => !SHADCN_TOKENS.has(t))
   .sort();
 
+// Tailwind v4 ships these as built-in utilities, so index.css redefining them is
+// pure duplication. Application code referencing the name is therefore already
+// migrated -- it resolves to Tailwind's own utility. Counted separately so the
+// "legacy references" figure only ever means "needs migrating".
+const TAILWIND_DUPLICATES = new Set(["tabular-nums", "animate-spin"]);
+
 // ── Walk app source, skipping the vendored shadcn primitives ────────────────
 const files = [];
 (function walk(dir) {
@@ -93,13 +99,25 @@ const TOKEN_RE = new RegExp(
   "g",
 );
 
+// Strip import statements and comments before scanning. Otherwise prose and
+// module specifiers register as usage: a comment reading "a real DOM table" was
+// counted as three references to the .table custom class, and an import of
+// './ui/input' as a reference to .input. Both invent migration work that does
+// not exist, which is the one thing a progress tracker must never do.
+const IMPORT_RE = /import\s+[\s\S]*?from\s+['"][^'"]*['"];?/g;
+const COMMENT_RE = /\/\*[\s\S]*?\*\/|(^|[^:])\/\/[^\n]*/g;
+const stripNonCode = (src) =>
+  src.replace(IMPORT_RE, "").replace(COMMENT_RE, "$1");
+
 const rows = [];
 let totalClasses = 0;
 let totalTokens = 0;
 
 for (const file of files) {
-  const src = fs.readFileSync(file, "utf8");
-  const classes = [...src.matchAll(CLASS_RE)].map((m) => m[1]);
+  const src = stripNonCode(fs.readFileSync(file, "utf8"));
+  const allClasses = [...src.matchAll(CLASS_RE)].map((m) => m[1]);
+  // Split off the names Tailwind already provides; those are not migration work.
+  const classes = allClasses.filter((c) => !TAILWIND_DUPLICATES.has(c));
   const tokens = [...src.matchAll(TOKEN_RE)].map((m) => m[1]);
   if (!classes.length && !tokens.length) continue;
   totalClasses += classes.length;
@@ -112,9 +130,14 @@ rows.sort(
     b.classes.length + b.tokens.length - (a.classes.length + a.tokens.length),
 );
 
-// Which custom classes in the CSS no longer have any caller?
+// Which custom classes in the CSS no longer have any caller? The Tailwind
+// duplicates are excluded: they are listed separately, and calling them
+// "unreferenced" would read as a dangling selector.
 const usedClasses = new Set(rows.flatMap((r) => r.classes));
-const deadClasses = customClasses.filter((c) => !usedClasses.has(c));
+const redundantSet = new Set(TAILWIND_DUPLICATES);
+const deadClasses = customClasses.filter(
+  (c) => !usedClasses.has(c) && !redundantSet.has(c),
+);
 
 // ── Output ──────────────────────────────────────────────────────────────────
 const name = (f) => path.relative(process.cwd(), f);
@@ -153,6 +176,10 @@ if (rows.length === 0) {
   );
 }
 
+// The duplicate names Tailwind already ships: still declared in index.css, but
+// every caller resolves to the built-in utility, so deleting the CSS is safe.
+const redundant = [...TAILWIND_DUPLICATES].filter((c) => customClasses.includes(c));
+
 console.log(
   "\nindex.css: " +
     customClasses.length +
@@ -162,6 +189,11 @@ console.log(
 );
 if (deadClasses.length) {
   console.log("  unreferenced: " + deadClasses.join(" "));
+}
+if (redundant.length) {
+  console.log(
+    "  duplicated by Tailwind, safe to delete: " + redundant.join(" "),
+  );
 }
 console.log(
   "index.css: " +

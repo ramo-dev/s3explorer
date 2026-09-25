@@ -1,10 +1,23 @@
 import { useRef, useCallback, useEffect, memo } from 'react';
 import { FixedSizeList as List } from 'react-window';
-import { MoreHorizontal, Check } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
+import { cn } from 'cn';
 import type { S3Object, SortField, SortDirection } from '../types';
 import { formatBytes, formatDate } from '../utils/formatters';
 import { getFileName, getFileIcon } from '../utils/fileUtils';
 import { PAGINATION } from '../constants';
+import { Button } from './ui/button';
+import { Checkbox } from './ui/checkbox';
+import { Skeleton } from './ui/skeleton';
+import { Spinner } from './ui/spinner';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from './ui/table';
 
 interface FileTableProps {
     objects: S3Object[];
@@ -35,21 +48,17 @@ interface RowProps {
     };
 }
 
-// Checkbox component for selection
+// Selection checkbox. stopPropagation is load-bearing: the row itself is
+// clickable for folders, so a click that toggles selection must not also
+// navigate.
 function SelectCheckbox({ checked, onChange, ariaLabel }: { checked: boolean; onChange: () => void; ariaLabel: string }) {
     return (
-        <button
-            onClick={(e) => { e.stopPropagation(); onChange(); }}
-            className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-colors ${checked
-                ? 'bg-accent-purple border-accent-purple text-white'
-                : 'border-border hover:border-foreground-muted'
-                }`}
+        <Checkbox
+            checked={checked}
+            onCheckedChange={onChange}
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
             aria-label={ariaLabel}
-            aria-checked={checked}
-            role="checkbox"
-        >
-            {checked && <Check className="w-3 h-3" />}
-        </button>
+        />
     );
 }
 
@@ -65,8 +74,13 @@ function SortButton({ field, label, sortField, sortDirection, onSort, className 
     const isActive = sortField === field;
     return (
         <button
+            type="button"
             onClick={() => onSort(field)}
-            className={`flex items-center gap-0.5 cursor-pointer hover:text-foreground transition-colors select-none ${isActive ? 'text-foreground' : ''} ${className || ''}`}
+            className={cn(
+                'flex cursor-pointer items-center gap-0.5 uppercase tracking-[0.05em] transition-colors select-none hover:text-foreground',
+                isActive ? 'text-foreground' : 'text-muted-foreground',
+                className,
+            )}
             aria-label={`Sort by ${label} ${isActive ? (sortDirection === 'asc' ? 'descending' : 'ascending') : 'ascending'}`}
         >
             {label}
@@ -86,7 +100,11 @@ const FileRow = memo(({ index, style, data }: RowProps) => {
     return (
         <div
             style={style}
-            className={`file-row flex items-center ${obj.isFolder ? 'is-folder cursor-pointer' : ''} ${isSelected ? 'bg-accent-purple/10' : ''}`}
+            className={cn(
+                'group/row flex items-center transition-colors hover:bg-accent',
+                obj.isFolder ? 'cursor-pointer' : 'cursor-default',
+                isSelected && 'bg-primary/10',
+            )}
             onContextMenu={e => onContextMenu(e, obj)}
             onClick={() => obj.isFolder && onNavigate(obj)}
             onKeyDown={(e) => obj.isFolder && e.key === 'Enter' && onNavigate(obj)}
@@ -106,21 +124,30 @@ const FileRow = memo(({ index, style, data }: RowProps) => {
 
             {/* Name column */}
             <div className="flex-1 min-w-0 flex items-center gap-2 px-2 sm:px-3">
-                <span className={`file-icon shrink-0 ${obj.isFolder ? 'text-accent-pink' : 'text-foreground-muted'}`} aria-hidden="true">
+                <span
+                    className={cn(
+                        'shrink-0 transition-colors duration-[50ms]',
+                        obj.isFolder ? 'text-primary' : 'text-muted-foreground',
+                    )}
+                    aria-hidden="true"
+                >
                     {getFileIcon(obj.key, obj.isFolder)}
                 </span>
-                <span className="file-name truncate text-xs" title={fileName}>
+                <span
+                    className="truncate text-xs group-hover/row:text-primary"
+                    title={fileName}
+                >
                     {fileName}
                 </span>
             </div>
 
             {/* Size column */}
-            <div className="w-[72px] hidden sm:flex items-center justify-center text-foreground-muted text-xs px-2" style={{ fontVariantNumeric: 'tabular-nums' }}>
+            <div className="w-[72px] hidden sm:flex items-center justify-center text-muted-foreground text-xs px-2 tabular-nums">
                 {obj.isFolder ? '—' : formatBytes(obj.size)}
             </div>
 
             {/* Modified column */}
-            <div className="w-[88px] hidden md:flex items-center justify-center text-foreground-muted text-xs px-2" style={{ fontVariantNumeric: 'tabular-nums' }}>
+            <div className="w-[88px] hidden md:flex items-center justify-center text-muted-foreground text-xs px-2 tabular-nums">
                 {obj.isFolder ? '—' : obj.lastModified ? <time dateTime={obj.lastModified}>{formatDate(obj.lastModified)}</time> : '—'}
             </div>
 
@@ -128,18 +155,19 @@ const FileRow = memo(({ index, style, data }: RowProps) => {
             <div className="w-12 sm:w-14 flex items-center justify-end pr-2">
                 {/* Size on mobile */}
                 {!obj.isFolder && (
-                    <span className="text-xs text-foreground-muted sm:hidden mr-1 whitespace-nowrap" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                    <span className="text-xs text-muted-foreground sm:hidden mr-1 whitespace-nowrap tabular-nums">
                         {formatBytes(obj.size)}
                     </span>
                 )}
-                <button
+                <Button
                     onClick={e => { e.stopPropagation(); onContextMenu(e, obj); }}
-                    className="btn btn-ghost btn-icon w-8 h-8"
+                    variant="ghost"
+                    size="icon-sm"
                     aria-label={`More options for ${fileName}`}
                     aria-haspopup="menu"
                 >
-                    <MoreHorizontal className="w-3.5 h-3.5" aria-hidden="true" />
-                </button>
+                    <MoreHorizontal className="size-3.5" aria-hidden="true" />
+                </Button>
             </div>
         </div>
     );
@@ -160,18 +188,22 @@ function StandardRow({ obj, onNavigate, onContextMenu, onItemSelect, isSelected,
     const fileName = getFileName(obj.key);
 
     return (
-        <tr
-            className={`file-row ${!skipAnimations ? 'stagger-item' : ''} ${obj.isFolder ? 'is-folder' : ''} ${isSelected ? 'bg-accent-purple/10' : ''}`}
+        <TableRow
+            className={cn(
+                'group/row transition-colors hover:bg-accent',
+                !skipAnimations && 'stagger-item',
+                obj.isFolder ? 'cursor-pointer' : 'cursor-default',
+                isSelected && 'bg-primary/10',
+            )}
             style={!skipAnimations ? { animationDelay: `${index * 25}ms` } : undefined}
             onContextMenu={e => onContextMenu(e, obj)}
             onClick={() => obj.isFolder && onNavigate(obj)}
             onKeyDown={(e) => obj.isFolder && e.key === 'Enter' && onNavigate(obj)}
             tabIndex={obj.isFolder ? 0 : -1}
-            role="row"
             aria-label={obj.isFolder ? `Folder: ${fileName}` : `File: ${fileName}`}
             aria-selected={isSelected}
         >
-            <td className="py-1.5 sm:py-2 w-10">
+            <TableCell className="w-10 py-1.5 sm:py-2 pl-4">
                 <div className="flex items-center justify-center">
                     <SelectCheckbox
                         checked={isSelected}
@@ -179,48 +211,68 @@ function StandardRow({ obj, onNavigate, onContextMenu, onItemSelect, isSelected,
                         ariaLabel={`Select ${fileName}`}
                     />
                 </div>
-            </td>
-            <td className="py-1.5 sm:py-2">
+            </TableCell>
+            <TableCell className="py-1.5 sm:py-2">
                 <div className="flex items-center gap-2">
-                    <span className={`file-icon shrink-0 ${obj.isFolder ? 'text-accent-pink' : 'text-foreground-muted'}`} aria-hidden="true">
+                    <span
+                        className={cn(
+                            'shrink-0 transition-colors duration-[50ms]',
+                            obj.isFolder ? 'text-primary' : 'text-muted-foreground',
+                        )}
+                        aria-hidden="true"
+                    >
                         {getFileIcon(obj.key, obj.isFolder)}
                     </span>
                     <div className="min-w-0 flex-1">
-                        <span className="file-name truncate block text-xs max-w-[120px] sm:max-w-none" title={fileName}>
+                        <span
+                            className="truncate block text-xs max-w-[120px] sm:max-w-none group-hover/row:text-primary"
+                            title={fileName}
+                        >
                             {fileName.length > 20 && window.innerWidth < 640
                                 ? fileName.slice(0, 18) + '…'
                                 : fileName}
                         </span>
                     </div>
                 </div>
-            </td>
+            </TableCell>
 
-            <td className="text-foreground-muted text-xs hidden sm:table-cell text-center! px-2! whitespace-nowrap" style={{ fontVariantNumeric: 'tabular-nums' }}>
+            <TableCell className="text-muted-foreground text-xs hidden sm:table-cell text-center! px-2! whitespace-nowrap tabular-nums">
                 {obj.isFolder ? '—' : formatBytes(obj.size)}
-            </td>
+            </TableCell>
 
-            <td className="text-foreground-muted text-xs hidden md:table-cell text-center! px-2! whitespace-nowrap" style={{ fontVariantNumeric: 'tabular-nums' }}>
+            <TableCell className="text-muted-foreground text-xs hidden md:table-cell text-center! px-2! whitespace-nowrap tabular-nums">
                 {obj.isFolder ? '—' : obj.lastModified ? <time dateTime={obj.lastModified}>{formatDate(obj.lastModified)}</time> : '—'}
-            </td>
+            </TableCell>
 
-            <td className="py-1.5 sm:py-2">
-                <div className="row-actions flex items-center justify-end">
+            <TableCell className="py-1.5 sm:py-2 pr-4">
+                <div className="flex items-center justify-end">
                     {!obj.isFolder && (
-                        <span className="text-xs text-foreground-muted sm:hidden mr-1 whitespace-nowrap" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                        <span className="text-xs text-muted-foreground sm:hidden mr-1 whitespace-nowrap tabular-nums">
                             {formatBytes(obj.size)}
                         </span>
                     )}
-                    <button
+                    <Button
                         onClick={e => { e.stopPropagation(); onContextMenu(e, obj); }}
-                        className="btn btn-ghost btn-icon w-8 h-8"
+                        variant="ghost"
+                        size="icon-sm"
                         aria-label={`More options for ${fileName}`}
                         aria-haspopup="menu"
                     >
-                        <MoreHorizontal className="w-3.5 h-3.5" aria-hidden="true" />
-                    </button>
+                        <MoreHorizontal className="size-3.5" aria-hidden="true" />
+                    </Button>
                 </div>
-            </td>
-        </tr>
+            </TableCell>
+        </TableRow>
+    );
+}
+
+// Shared "loading more" footer, used by both the virtualized and table branches.
+function LoadMoreIndicator() {
+    return (
+        <div className="flex items-center justify-center py-3 text-muted-foreground text-sm">
+            <Spinner className="mr-2" aria-hidden="true" />
+            Loading more...
+        </div>
     );
 }
 
@@ -242,7 +294,7 @@ export function FileTable({ objects, loading, selectedKeys, onNavigate, onContex
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
-            window.removeEventListener('blur-sm', handleBlur);
+            window.removeEventListener('blur', handleBlur);
         };
     }, []);
 
@@ -287,13 +339,13 @@ export function FileTable({ objects, loading, selectedKeys, onNavigate, onContex
                 {[...Array(5)].map((_, i) => (
                     <div
                         key={i}
-                        className="flex items-center gap-3 p-3 stagger-item"
+                        className="stagger-item flex items-center gap-3 p-3"
                         style={{ animationDelay: `${i * 40}ms` }}
                         aria-hidden="true"
                     >
-                        <div className="w-8 h-8 skeleton rounded" />
-                        <div className="flex-1 h-4 skeleton" />
-                        <div className="w-16 h-4 skeleton hidden sm:block" />
+                        <Skeleton className="w-8 h-8 rounded" />
+                        <Skeleton className="flex-1 h-4" />
+                        <Skeleton className="w-16 h-4 hidden sm:block" />
                     </div>
                 ))}
                 <span className="sr-only">Loading file list...</span>
@@ -306,7 +358,7 @@ export function FileTable({ objects, loading, selectedKeys, onNavigate, onContex
         return (
             <div ref={containerRef} className="h-full flex flex-col">
                 {/* Header with sortable columns */}
-                <div className="flex items-center border-b border-border bg-background-secondary/50 text-xs font-medium text-foreground-muted uppercase tracking-wider">
+                <div className="flex items-center border-b border-border bg-card/50 text-xs font-medium text-muted-foreground">
                     <div className="w-10 flex items-center justify-center pl-2">
                         <SelectCheckbox
                             checked={allSelected}
@@ -344,15 +396,7 @@ export function FileTable({ objects, loading, selectedKeys, onNavigate, onContex
                         {FileRow}
                     </List>
                 </div>
-                {loadingMore && (
-                    <div className="flex items-center justify-center py-3 text-foreground-muted text-sm">
-                        <svg className="w-4 h-4 animate-spin mr-2" viewBox="0 0 24 24" fill="none">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        Loading more...
-                    </div>
-                )}
+                {loadingMore && <LoadMoreIndicator />}
             </div>
         );
     }
@@ -364,62 +408,58 @@ export function FileTable({ objects, loading, selectedKeys, onNavigate, onContex
 
     return (
         <>
-            <table className="table" role="grid" aria-label="Files and folders">
-                <thead>
-                    <tr>
-                        <th scope="col" className="w-10">
-                            <div className="flex items-center justify-center">
-                                <SelectCheckbox
-                                    checked={allSelected}
-                                    onChange={() => onSelectAll(!allSelected)}
-                                    ariaLabel={allSelected ? 'Deselect all' : 'Select all'}
-                                />
-                            </div>
-                        </th>
-                        <th scope="col">
-                            <SortButton field="name" label="Name" {...sortProps} />
-                        </th>
-                        <th scope="col" className="w-[72px] hidden sm:table-cell text-center! px-2!">
-                            <SortButton field="size" label="Size" {...sortProps} className="justify-center w-full" />
-                        </th>
-                        <th scope="col" className="w-[88px] hidden md:table-cell text-center! px-2!">
-                            <SortButton field="lastModified" label="Modified" {...sortProps} className="justify-center w-full" />
-                        </th>
-                        <th scope="col" className="w-12 sm:w-14"><span className="sr-only">Actions</span></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {objects.map((obj, i) => (
-                        <StandardRow
-                            key={obj.key}
-                            obj={obj}
-                            onNavigate={onNavigate}
-                            onContextMenu={onContextMenu}
-                            onItemSelect={handleItemSelect}
-                            isSelected={selectedKeys.has(obj.key)}
-                            index={i}
-                            skipAnimations={skipAnimations}
-                        />
-                    ))}
-                </tbody>
-            </table>
-            {loadingMore && (
-                <div className="flex items-center justify-center py-3 text-foreground-muted text-sm">
-                    <svg className="w-4 h-4 animate-spin mr-2" viewBox="0 0 24 24" fill="none">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Loading more...
-                </div>
-            )}
+            {/* shadcn's Table wraps the table in an overflow-x-auto div. That div
+                would become the nearest scroll container, and since its height is
+                content-sized it never scrolls vertically -- which silently breaks
+                the sticky header below. Reset it to overflow-visible so sticky
+                resolves against the outer pane. */}
+            <div className="[&_[data-slot=table-container]]:overflow-visible">
+                <Table role="grid" aria-label="Files and folders">
+                    <TableHeader className="[&_th]:sticky [&_th]:top-0 [&_th]:z-10 [&_th]:bg-card [&_th]:uppercase [&_th]:tracking-[0.05em] [&_th]:text-[0.6875rem] [&_th]:font-medium [&_th]:text-muted-foreground [&_th:first-child]:pl-4 [&_th:last-child]:pr-4">
+                        <TableRow className="hover:bg-transparent">
+                            <TableHead scope="col" className="w-10">
+                                <div className="flex items-center justify-center">
+                                    <SelectCheckbox
+                                        checked={allSelected}
+                                        onChange={() => onSelectAll(!allSelected)}
+                                        ariaLabel={allSelected ? 'Deselect all' : 'Select all'}
+                                    />
+                                </div>
+                            </TableHead>
+                            <TableHead scope="col">
+                                <SortButton field="name" label="Name" {...sortProps} />
+                            </TableHead>
+                            <TableHead scope="col" className="w-[72px] hidden sm:table-cell text-center! px-2!">
+                                <SortButton field="size" label="Size" {...sortProps} className="justify-center w-full" />
+                            </TableHead>
+                            <TableHead scope="col" className="w-[88px] hidden md:table-cell text-center! px-2!">
+                                <SortButton field="lastModified" label="Modified" {...sortProps} className="justify-center w-full" />
+                            </TableHead>
+                            <TableHead scope="col" className="w-12 sm:w-14"><span className="sr-only">Actions</span></TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {objects.map((obj, i) => (
+                            <StandardRow
+                                key={obj.key}
+                                obj={obj}
+                                onNavigate={onNavigate}
+                                onContextMenu={onContextMenu}
+                                onItemSelect={handleItemSelect}
+                                isSelected={selectedKeys.has(obj.key)}
+                                index={i}
+                                skipAnimations={skipAnimations}
+                            />
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
+            {loadingMore && <LoadMoreIndicator />}
             {hasMore && !loadingMore && (
                 <div className="flex items-center justify-center py-4">
-                    <button
-                        onClick={onLoadMore}
-                        className="btn btn-ghost text-sm text-foreground-secondary hover:text-foreground"
-                    >
+                    <Button onClick={onLoadMore} variant="ghost" size="sm">
                         Load more files...
-                    </button>
+                    </Button>
                 </div>
             )}
         </>
