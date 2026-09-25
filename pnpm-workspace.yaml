@@ -1,0 +1,16 @@
+packages:
+  - apps/*
+
+# `overrides` in a workspace package.json is an npm-only field; pnpm reads
+# overrides from here. Moved off apps/server/package.json.
+overrides:
+  qs: ^6.16.0
+
+# pnpm blocks dependency lifecycle scripts unless each one is explicitly
+# reviewed here (`onlyBuiltDependencies` was removed in pnpm v11).
+# - better-sqlite3, argon2: ship native bindings via an `install` script
+# - esbuild: fetches its platform binary in a postinstall; Vite won't run without it
+allowBuilds:
+  better-sqlite3: true
+  argon2: true
+  esbuild: true

@@ -3,20 +3,22 @@
   "version": "3.0.0",
   "description": "A secure, self-hosted web-based file manager for S3-compatible storage buckets",
   "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.3.4",
   "scripts": {
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "dev:server": "cd apps/server && npm run dev",
-    "dev:client": "cd apps/client && npm run dev",
-    "build": "npm run build:client && npm run build:server",
-    "build:client": "cd apps/client && npm run build",
-    "build:server": "cd apps/server && npm run build",
-    "start": "cd apps/server && npm start",
-    "install:all": "npm install && cd apps/client && npm install && cd ../server && npm install"
+    "dev": "concurrently \"pnpm run dev:server\" \"pnpm run dev:client\"",
+    "dev:server": "pnpm --filter s3-explorer-server dev",
+    "dev:client": "pnpm --filter s3-explorer-client dev",
+    "build": "pnpm run build:client && pnpm run build:server",
+    "build:client": "pnpm --filter s3-explorer-client build",
+    "build:server": "pnpm --filter s3-explorer-server build",
+    "start": "pnpm --filter s3-explorer-server start",
+    "typecheck": "pnpm -r typecheck"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   }
 }
