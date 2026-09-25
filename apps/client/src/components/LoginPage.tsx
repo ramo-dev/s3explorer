@@ -56,7 +56,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
           <h1 className="text-lg sm:text-xl font-semibold text-foreground">
             {showForgot ? 'Forgot Password' : 'Welcome back'}
           </h1>
-          <p className="text-sm text-foreground-muted mt-1.5 sm:mt-2">
+          <p className="text-sm text-muted-foreground mt-1.5 sm:mt-2">
             {showForgot ? 'How to reset your password' : 'Enter your password to continue'}
           </p>
         </div>

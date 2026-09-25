@@ -20,7 +20,7 @@ export function OfflineIndicator({ isOnline, isBackendReachable }: OfflineIndica
 
     return (
         <div
-            className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 mb-safe animate-slide-up-fade"
+            className="fixed bottom-4 left-1/2 z-50 mb-safe -translate-x-1/2 animate-slide-up-fade"
             role="alert"
             aria-live="assertive"
         >

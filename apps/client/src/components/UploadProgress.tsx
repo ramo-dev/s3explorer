@@ -11,7 +11,7 @@ export function UploadProgress({ uploading, progress }: UploadProgressProps) {
 
     return (
         <div
-            className="px-4 py-3 border-b border-border bg-background-secondary animate-fadeInDown"
+            className="animate-fade-in-down border-b border-border bg-card px-4 py-3"
             role="status"
             aria-live="polite"
             aria-label={`Uploading files: ${progress}% complete`}
@@ -22,7 +22,7 @@ export function UploadProgress({ uploading, progress }: UploadProgressProps) {
                 <div className="flex-1">
                     <div className="flex items-center justify-between mb-1.5">
                         <span className="text-sm">Uploading…</span>
-                        <span className="text-sm text-foreground-muted tabular-nums">{progress}%</span>
+                        <span className="text-sm tabular-nums text-muted-foreground">{progress}%</span>
                     </div>
 
                     <Progress

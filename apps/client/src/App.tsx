@@ -29,6 +29,7 @@ const WelcomeMessage = lazy(() => import('./components/WelcomeMessage').then(m =
 const FilePreviewModal = lazy(() => import('./components/FilePreviewModal').then(m => ({ default: m.FilePreviewModal })));
 import { BatchActionsBar } from './components/BatchActionsBar';
 import { Spinner } from './components/ui/spinner';
+import { Button } from './components/ui/button';
 import { STORAGE_KEYS } from './constants';
 import type { Connection } from './api';
 
@@ -794,7 +795,7 @@ export default function App() {
   if (checkingAuth) {
     return (
       <div className="fixed inset-0 bg-background flex items-center justify-center" role="status" aria-live="polite">
-        <div className="text-foreground-muted" aria-label="Loading application">
+        <div className="text-muted-foreground" aria-label="Loading application">
           <Spinner className="size-6" aria-label="Loading application" />
         </div>
       </div>
@@ -820,7 +821,7 @@ export default function App() {
       {/* Skip link for accessibility */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-100 focus:bg-background focus:px-4 focus:py-2 focus:rounded-md focus:ring-2 focus:ring-accent-pink focus:text-foreground"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-100 focus:bg-background focus:px-4 focus:py-2 focus:rounded-md focus:ring-2 focus:ring-ring focus:text-foreground"
       >
         Skip to main content
       </a>
@@ -875,12 +876,13 @@ export default function App() {
               title="No connection configured"
               description="Add an S3 connection to get started"
               action={
-                <button
+                <Button
                   onClick={() => setShowConnectionManager(true)}
-                  className="group mt-6 px-6 py-3 rounded-lg border border-dashed border-border text-foreground-secondary hover:text-accent-purple hover:border-accent-purple hover:bg-accent-purple/5 transition-all text-sm font-medium"
+                  variant="outline"
+                  className="group mt-6 border-dashed text-sm font-medium hover:border-primary hover:bg-primary/5 hover:text-primary"
                 >
                   Add Connection
-                </button>
+                </Button>
               }
             />
           ) : !selectedBucket ? (

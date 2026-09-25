@@ -38,13 +38,32 @@ const SHADCN_TOKENS = new Set([
   "success",
 ]);
 
-const css = fs.readFileSync(cssFile, "utf8");
+const rawCss = fs.readFileSync(cssFile, "utf8");
 
-// Custom classes: every top-level class selector in index.css. shadcn's own
-// styling comes from Tailwind utilities and [data-slot] selectors, never from a
-// bare class here, so this is exactly the hand-written layer.
+// Strip CSS comments before parsing anything. Without this, a commented-out
+// `.btn { }` counts as a live custom class and a comment that merely names an
+// at-rule -- "@utility blocks" in a sentence about animation plumbing -- reads
+// as a declaration of a utility called "blocks". Both invent work.
+const css = rawCss.replace(/\/\*[\s\S]*?\*\//g, "");
+
+// Names declared as `@utility foo` are deliberate Tailwind utilities, not
+// hand-written class selectors. They are tracked separately below so that
+// "legacy class" keeps meaning exactly one thing: a bare `.foo { }` rule that
+// should become either a shadcn primitive or a declared utility.
+const declaredUtilities = new Set(
+  [...css.matchAll(/@utility\s+([a-z][a-z0-9-]*)/g)].map((m) => m[1]),
+);
+
+// Custom classes: every top-level class selector in index.css that is not also
+// a declared utility. shadcn's own styling comes from Tailwind utilities and
+// [data-slot] selectors, never from a bare class here, so this is exactly the
+// hand-written layer.
 const customClasses = [
-  ...new Set([...css.matchAll(/^\.([a-z][a-z0-9-]*)/gm)].map((m) => m[1])),
+  ...new Set(
+    [...css.matchAll(/^\.([a-z][a-z0-9-]*)/gm)]
+      .map((m) => m[1])
+      .filter((c) => !declaredUtilities.has(c)),
+  ),
 ];
 
 // App-only colour tokens: those declared in a :root / .dark / [data-theme]
@@ -113,6 +132,17 @@ const IMPORT_RE = /import\s+[\s\S]*?from\s+['"][^'"]*['"];?/g;
 const COMMENT_RE = /\/\*[\s\S]*?\*\/|(^|[^:])\/\/[^\n]*/g;
 const stripNonCode = (src) =>
   src.replace(IMPORT_RE, "").replace(COMMENT_RE, "$1");
+
+// Per-file call-site count for a declared utility, using the same stripped
+// source the legacy scan uses so a name mentioned only in a comment or an
+// import path is not counted as a caller.
+const utilityUse = (file, name) => {
+  const re = new RegExp(
+    `(?:^|[\\s"'\`])(?:[a-z0-9-]+:)*${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?=[\\s"'\`]|$)`,
+    "gm",
+  );
+  return [...stripNonCode(fs.readFileSync(file, "utf8")).matchAll(re)].length;
+};
 
 const rows = [];
 let totalClasses = 0;
@@ -206,5 +236,24 @@ console.log(
     " app-only tokens: " +
     (legacyTokens.join(" ") || "(none)"),
 );
+
+// Declared utilities, with how many call sites each has. A zero here means the
+// utility can be deleted outright, which is the same signal deadClasses gives
+// for class selectors.
+if (declaredUtilities.size) {
+  const counts = [...declaredUtilities]
+    .map((u) => [u, files.filter((f) => utilityUse(f, u)).length])
+    .sort((a, b) => a[0].localeCompare(b[0]));
+  const orphans = counts.filter(([, n]) => n === 0).map(([u]) => u);
+  console.log(
+    "index.css: " +
+      declaredUtilities.size +
+      " declared @utility: " +
+      counts.map(([u, n]) => `${u} (${n})`).join(" "),
+  );
+  if (orphans.length) {
+    console.log("  unreferenced utilities: " + orphans.join(" "));
+  }
+}
 
 process.exit(totalClasses + totalTokens > 0 ? 1 : 0);

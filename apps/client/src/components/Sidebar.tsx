@@ -166,7 +166,7 @@ export function Sidebar({
                             <span className="flex-1 truncate text-xs">{bucket.name}</span>
                             <div className="flex items-center gap-0.5 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                 <Button onClick={e => handleCopyBucketName(e, bucket.name)} variant="ghost" size="icon-xs" className="text-muted-foreground hover:text-primary" tabIndex={collapsed ? -1 : 0} aria-label={`Copy: ${bucket.name}`}>
-                                    {copiedBucket === bucket.name ? <Check className="text-accent-green" /> : <Copy />}
+                                    {copiedBucket === bucket.name ? <Check className="text-success" /> : <Copy />}
                                 </Button>
                                 {!pinnedBucket && (
                                     <Button onClick={e => { e.stopPropagation(); onDeleteBucket(bucket.name); }} variant="ghost" size="icon-xs" className="text-muted-foreground hover:text-destructive" tabIndex={collapsed ? -1 : 0} aria-label={`Delete: ${bucket.name}`}>
@@ -282,7 +282,7 @@ export function Sidebar({
                document flow, while mobile uses a fixed overlay with translate. You
                can't combine both behaviors on one element without layout thrashing. */}
             <aside
-                className="hidden md:block relative border-r border-border bg-background-secondary shrink-0 overflow-hidden"
+                className="hidden md:block relative border-r border-border bg-card shrink-0 overflow-hidden"
                 style={{
                     width: collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH,
                     transition: 'width 240ms cubic-bezier(0.4, 0, 0.2, 1)',
@@ -328,7 +328,7 @@ export function Sidebar({
 
             {/* ── Mobile sidebar: fixed overlay, unaffected by collapsed state ── */}
             <aside
-                className={`md:hidden flex flex-col w-[260px] sm:w-[232px] border-r border-border bg-background-secondary fixed inset-y-0 left-0 z-50 transition-transform duration-200 ease-in-out ${
+                className={`md:hidden flex flex-col w-[260px] sm:w-[232px] border-r border-border bg-card fixed inset-y-0 left-0 z-50 transition-transform duration-200 ease-in-out ${
                     sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 }`}
                 role="navigation"

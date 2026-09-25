@@ -46,32 +46,43 @@ export function WelcomeMessage({ onConfigure }: WelcomeMessageProps) {
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
       }`}
     >
-      <div
-        onClick={handleConfigure}
-        className="group relative bg-background-secondary border border-border rounded-lg p-3.5 shadow-xl cursor-pointer transition-all duration-200 hover:border-accent-purple/50 hover:bg-background-tertiary"
-      >
+      <div className="group relative rounded-lg border border-border bg-card p-3.5 shadow-xl transition-colors duration-200 hover:border-primary/50 hover:bg-muted">
+        {/* The card is one big target, but the dismiss control inside it is a
+            real button, so wrapping both in a button would nest interactive
+            elements. Instead the action is a transparent button stretched over
+            the whole card, and dismiss sits on top of it. Both are ordinary
+            buttons, so both are real tab stops -- the card as a whole was
+            previously reachable by mouse only. */}
         <button
-          onClick={(e) => { e.stopPropagation(); handleDismiss(); }}
-          className="absolute top-2 right-2 p-1.5 text-foreground-muted hover:text-foreground transition-colors z-10"
+          type="button"
+          onClick={handleConfigure}
+          className="absolute inset-0 z-0 cursor-pointer rounded-lg"
+          aria-label="Configure your S3 connection"
+        />
+
+        <button
+          type="button"
+          onClick={handleDismiss}
+          className="absolute top-2 right-2 z-10 cursor-pointer p-1.5 text-muted-foreground transition-colors hover:text-foreground"
           aria-label="Dismiss welcome message"
         >
-          <X className="w-4 h-4" aria-hidden="true" />
+          <X className="size-4" aria-hidden="true" />
         </button>
 
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-accent-purple/10 flex items-center justify-center shrink-0 group-hover:bg-accent-purple/20 transition-colors">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/20">
             <img
               src="/logo.svg"
               alt=""
-              className="w-6 h-6 logo-themed opacity-80 group-hover:opacity-100 transition-opacity"
+              className="logo-themed size-6 opacity-80 transition-opacity group-hover:opacity-100"
             />
           </div>
           {/* Right padding keeps the title clear of the absolutely positioned dismiss button */}
-          <div className="flex-1 min-w-0 pr-6">
-            <h4 className="text-sm font-medium text-foreground group-hover:text-accent-purple transition-colors truncate">
+          <div className="min-w-0 flex-1 pr-6">
+            <h4 className="truncate text-sm font-medium text-foreground transition-colors group-hover:text-primary">
               Welcome to S3 Explorer
             </h4>
-            <p className="text-xs text-foreground-muted mt-0.5">
+            <p className="mt-0.5 text-xs text-muted-foreground">
               Click to configure your connection
             </p>
           </div>

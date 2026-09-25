@@ -14,10 +14,13 @@ export function DropOverlay({ isDragActive }: DropOverlayProps) {
             aria-live="polite"
             aria-label="Drop files to upload"
         >
-            <div className="absolute inset-4 border-2 border-dashed border-accent-pink rounded-lg bg-background/90" aria-hidden="true" />
+            <div className="absolute inset-4 rounded-lg border-2 border-dashed border-primary bg-background/90" aria-hidden="true" />
             <div className="relative text-center">
-                <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-accent-purple to-accent-pink flex items-center justify-center mx-auto mb-4">
-                    <Upload className="w-8 h-8 text-white" aria-hidden="true" />
+                {/* The old gradient ran accent-purple to accent-pink. Both are now
+                    the same --primary token, so a two-hue gradient is no longer
+                    expressible; this keeps the same light-to-dark falloff. */}
+                <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-linear-to-br from-primary to-primary/70">
+                    <Upload className="size-8 text-primary-foreground" aria-hidden="true" />
                 </div>
                 <p className="text-base font-medium">Drop to upload</p>
             </div>

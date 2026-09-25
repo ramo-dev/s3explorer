@@ -1,5 +1,6 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { Button } from './ui/button';
 
 interface Props {
     children: ReactNode;
@@ -42,45 +43,39 @@ export class ErrorBoundary extends Component<Props, State> {
             return (
                 <div className="fixed inset-0 bg-background flex items-center justify-center p-4">
                     <div className="max-w-md w-full text-center space-y-6">
-                        <div className="w-16 h-16 mx-auto rounded-full bg-accent-red/10 flex items-center justify-center">
-                            <AlertTriangle className="w-8 h-8 text-accent-red" />
+                        <div className="mx-auto mb-3 flex size-16 items-center justify-center rounded-full bg-destructive/10">
+                            <AlertTriangle className="size-8 text-destructive" aria-hidden="true" />
                         </div>
 
                         <div className="space-y-2">
                             <h1 className="text-xl font-semibold text-foreground">
                                 Something went wrong
                             </h1>
-                            <p className="text-sm text-foreground-muted">
+                            <p className="text-sm text-muted-foreground">
                                 The application encountered an unexpected error. This has been logged for investigation.
                             </p>
                         </div>
 
                         {this.state.error && (
-                            <details className="text-left bg-background-secondary rounded-lg p-4 text-xs">
-                                <summary className="cursor-pointer text-foreground-secondary font-medium mb-2">
+                            <details className="rounded-lg bg-card p-4 text-left text-xs">
+                                <summary className="mb-2 cursor-pointer font-medium text-muted-foreground">
                                     Error Details
                                 </summary>
-                                <pre className="overflow-auto text-accent-red whitespace-pre-wrap wrap-break-word">
+                                <pre className="overflow-auto whitespace-pre-wrap wrap-break-word text-destructive">
                                     {this.state.error.toString()}
                                     {this.state.errorInfo?.componentStack}
                                 </pre>
                             </details>
                         )}
 
-                        <div className="flex gap-3 justify-center">
-                            <button
-                                onClick={this.handleReset}
-                                className="btn btn-secondary"
-                            >
+                        <div className="flex justify-center gap-3">
+                            <Button onClick={this.handleReset} variant="secondary">
                                 Try Again
-                            </button>
-                            <button
-                                onClick={this.handleReload}
-                                className="btn btn-primary flex items-center gap-2"
-                            >
-                                <RefreshCw className="w-4 h-4" />
+                            </Button>
+                            <Button onClick={this.handleReload} className="items-center gap-2">
+                                <RefreshCw className="size-4" aria-hidden="true" />
                                 Reload Page
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>

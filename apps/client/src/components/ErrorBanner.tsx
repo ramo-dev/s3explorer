@@ -11,7 +11,7 @@ export function ErrorBanner({ error, onDismiss }: ErrorBannerProps) {
 
     return (
         <div
-            className="px-4 py-3 bg-destructive/10 border-b border-destructive/20 flex items-center justify-between animate-fadeInDown"
+            className="px-4 py-3 bg-destructive/10 border-b border-destructive/20 flex items-center justify-between animate-fade-in-down"
             role="alert"
             aria-live="assertive"
         >

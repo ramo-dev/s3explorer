@@ -182,7 +182,7 @@ function RequirementList({ title, requirements }: { title: string; requirements:
             <div className="grid grid-cols-1 gap-1.5">
                 {requirements.map((req) => (
                     <div key={req.label} className="flex items-center gap-2 text-sm">
-                        <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${req.valid ? 'bg-accent-green/20 text-accent-green' : 'bg-muted text-muted-foreground'
+                        <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${req.valid ? 'bg-success/20 text-success' : 'bg-muted text-muted-foreground'
                             }`}>
                             {req.valid && <Check className="size-2.5" aria-hidden="true" />}
                         </div>

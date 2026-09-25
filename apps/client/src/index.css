@@ -110,51 +110,20 @@
 /*
   App-specific animations. Fonts, radii, colours and shadows are all declared
   in the theme blocks above, so they are intentionally absent here.
+
+  The @keyframes themselves live at the bottom of this file, outside @theme.
+  Keyframes nested in @theme are emitted only when the matching --animate-*
+  utility is used, and two of them below are also referenced by custom utility
+  declarations that Tailwind cannot see a dependency from. Top-level keyframes
+  are always emitted verbatim, so the reference here is one-directional and safe.
 */
 @theme {
   --animate-fade-in: fadeIn 200ms ease;
-  --animate-slide-up: slideUp 200ms ease;
   --animate-slide-in: slideIn 200ms ease;
-  --animate-slide-up-fade: slideUpFade 300ms ease;
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-  @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateX(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-  @keyframes slideUpFade {
-    from {
-      opacity: 0;
-      transform: translateY(16px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
+  --animate-fade-in-up: fadeInUp 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-fade-in-down: fadeInDown 300ms cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-slide-in-right: slideInRight 300ms cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-slide-up-fade: slideUpFade 300ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @layer base {
@@ -737,72 +706,52 @@ select.input option {
   transform: translateX(0);
 }
 
+/*
+  Keyframes for the --animate-* entries above.
+
+  Every offset here uses the independent `translate` property rather than
+  `transform`. These animations run on elements that are horizontally centred
+  with a -translate-x-1/2 utility, and `transform` inside a keyframe replaces
+  that transform outright, so the element would slide in from an off-centre
+  position and then snap once the animation ended. `translate` is an
+  independent property and composes with `transform` instead.
+*/
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
+@keyframes slideIn {
+  from { opacity: 0; translate: -10px 0; }
+  to { opacity: 1; translate: 0 0; }
+}
+
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; translate: 0 8px; }
+  to { opacity: 1; translate: 0 0; }
 }
 
 @keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-@keyframes slideInLeft {
-  from { opacity: 0; transform: translateX(-8px); }
-  to { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; translate: 0 -8px; }
+  to { opacity: 1; translate: 0 0; }
 }
 
 @keyframes slideInRight {
-  from { opacity: 0; transform: translateX(8px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  from { opacity: 0; translate: 8px 0; }
+  to { opacity: 1; translate: 0 0; }
 }
 
 @keyframes slideUpFade {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
+  from { opacity: 0; translate: 0 16px; }
+  to { opacity: 1; translate: 0 0; }
 }
 
-.animate-slide-up-fade {
-  animation: slideUpFade 300ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.animate-slideUp {
-  animation: slideUpFade 300ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes spin-once {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.animate-spin-once {
-  animation: spin-once 0.5s ease-in-out;
+/* Staggered entrance for list rows. Kept as a utility rather than spelled out
+   at each call site: the opacity floor plus `forwards` is what leaves the
+   element visible after the animation, and dropping either is a silent bug. */
+@utility stagger-item {
+  opacity: 0;
+  animation: fadeInUp 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Logo spin on hover */
@@ -834,19 +783,6 @@ select.input option {
 
 [data-theme="light"] .logo-themed:hover {
   filter: invert(0) drop-shadow(0 0 4px rgba(0,0,0,0.15)) !important;
-}
-
-.animate-fadeIn { animation: none; opacity: 1; }
-.animate-fadeInUp { animation: fadeInUp 300ms cubic-bezier(0.22, 1, 0.36, 1); }
-.animate-fadeInDown { animation: fadeInDown 300ms cubic-bezier(0.22, 1, 0.36, 1); }
-.animate-scaleIn { animation: scaleIn 320ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both; }
-.animate-slideInLeft { animation: slideInLeft 300ms cubic-bezier(0.22, 1, 0.36, 1); }
-.animate-slideInRight { animation: slideInRight 300ms cubic-bezier(0.22, 1, 0.36, 1); }
-.animate-spin { animation: spin 1s linear infinite; }
-
-.stagger-item {
-  opacity: 0;
-  animation: fadeInUp 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Create bucket button - subtle glow on hover. Only the glow lives here; the
