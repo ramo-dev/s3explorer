@@ -31,7 +31,7 @@ s3explorer/
 ### Local Development
 
 ```bash
-git clone https://github.com/subratomandal/s3explorer.git
+git clone https://github.com/ramo-dev/s3explorer.git
 cd s3explorer
 npm run install:all
 
@@ -46,7 +46,7 @@ Backend on :3000, frontend on :5173, Vite proxies `/api` to Express
 
 ### Before You Start
 
-1. Check existing [issues](https://github.com/subratomandal/s3explorer/issues)
+1. Check existing [issues](https://github.com/ramo-dev/s3explorer/issues)
 2. For large changes, open an issue first
 
 ### Branch Naming

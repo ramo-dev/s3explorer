@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Database, Plus, Trash2, Copy, Check, Settings, LogOut, Sun, Moon, PanelLeftClose, PanelLeft, Github, X } from 'lucide-react';
+import { Database, Plus, Trash2, Copy, Check, Settings, LogOut, Sun, Moon, PanelLeftClose, PanelLeft, X } from 'lucide-react';
+import { GithubIcon } from './GithubIcon';
 import type { Bucket } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
 import { UI_DELAYS } from '../constants';
@@ -186,8 +187,8 @@ export function Sidebar({
                         <span className="flex-1 truncate text-left">{activeConnectionName || 'Connections'}</span>
                     </button>
                 )}
-                <a href="https://github.com/subratomandal/s3explorer" target="_blank" rel="noopener noreferrer" className="w-full flex items-center gap-2 h-8 px-2.5 text-foreground-muted hover:text-foreground text-xs transition-colors" tabIndex={collapsed ? -1 : 0}>
-                    <Github className="w-3.5 h-3.5 shrink-0" />
+                <a href="https://github.com/ramo-dev/s3explorer" target="_blank" rel="noopener noreferrer" className="w-full flex items-center gap-2 h-8 px-2.5 text-foreground-muted hover:text-foreground text-xs transition-colors" tabIndex={collapsed ? -1 : 0}>
+                    <GithubIcon className="w-3.5 h-3.5 shrink-0" />
                     <span>GitHub</span>
                 </a>
                 {onLogout && (
@@ -239,8 +240,8 @@ export function Sidebar({
                     <Settings className="w-3.5 h-3.5" />
                 </button>
             )}
-            <a href="https://github.com/subratomandal/s3explorer" target="_blank" rel="noopener noreferrer" className="w-8 h-8 flex items-center justify-center text-foreground-muted hover:text-foreground transition-colors shrink-0" aria-label="GitHub" title="GitHub">
-                <Github className="w-3.5 h-3.5" />
+            <a href="https://github.com/ramo-dev/s3explorer" target="_blank" rel="noopener noreferrer" className="w-8 h-8 flex items-center justify-center text-foreground-muted hover:text-foreground transition-colors shrink-0" aria-label="GitHub" title="GitHub">
+                <GithubIcon className="w-3.5 h-3.5" />
             </a>
             {onLogout && (
                 <button onClick={onLogout} className="w-8 h-8 flex items-center justify-center text-foreground-muted hover:text-accent-red transition-colors shrink-0" aria-label="Logout" title="Logout">

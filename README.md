@@ -8,6 +8,8 @@ A secure, self-hosted web-based file manager for S3-compatible storage buckets.
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE.md)
 [![GitHub Stars](https://img.shields.io/github/stars/subratomandal/s3explorer?style=for-the-badge)](https://github.com/subratomandal/s3explorer)
 
+> **This is a fork.** Originally created by [@subratomandal](https://github.com/subratomandal) — see the credits below. This repository advances that work; it is not the upstream release. Images here (`ghcr.io/ramo-dev/s3explorer`) are built from this branch, so they may differ from what upstream ships.
+
 ### Overview
 
 Managing S3 buckets often requires command-line tools or provider-specific dashboards that vary significantly in usability. S3 Explorer unifies this experience by offering a single, consistent web interface to upload, download, and organize files across any S3-compatible provider.
@@ -25,15 +27,15 @@ Supported Providers:
 ### Screenshots
 
 <p>
-  <img src="https://raw.githubusercontent.com/subratomandal/s3explorer/main/apps/client/public/images/main.png" alt="S3 Explorer File manager interface" />
+  <img src="https://raw.githubusercontent.com/ramo-dev/s3explorer/main/apps/client/public/images/main.png" alt="S3 Explorer File manager interface" />
 </p>
 
 <p>
-  <img src="https://raw.githubusercontent.com/subratomandal/s3explorer/main/apps/client/public/images/connect.png" alt="S3 Explorer Bucket navigation" />
+  <img src="https://raw.githubusercontent.com/ramo-dev/s3explorer/main/apps/client/public/images/connect.png" alt="S3 Explorer Bucket navigation" />
 </p>
 
 <p>
-  <img src="https://raw.githubusercontent.com/subratomandal/s3explorer/main/apps/client/public/images/search.png" alt="S3 Explorer Connection manager" />
+  <img src="https://raw.githubusercontent.com/ramo-dev/s3explorer/main/apps/client/public/images/search.png" alt="S3 Explorer Connection manager" />
 </p>
 
 ### Architecture
@@ -127,7 +129,7 @@ Or skip these and configure through the setup wizard on first launch.
 #### Docker
 
 ```bash
-docker run -d --name s3explorer --restart unless-stopped -p 3000:3000 -e APP_PASSWORD='YourStr0ng!Pass#2024' -e SESSION_SECRET="$(openssl rand -hex 32)" -v s3explorer_data:/data ghcr.io/subratomandal/s3explorer:latest
+docker run -d --name s3explorer --restart unless-stopped -p 3000:3000 -e APP_PASSWORD='YourStr0ng!Pass#2024' -e SESSION_SECRET="$(openssl rand -hex 32)" -v s3explorer_data:/data ghcr.io/ramo-dev/s3explorer:latest
 ```
 
 #### Docker Compose
@@ -135,7 +137,7 @@ docker run -d --name s3explorer --restart unless-stopped -p 3000:3000 -e APP_PAS
 ```yaml
 services:
   s3-explorer:
-    image: ghcr.io/subratomandal/s3explorer:latest
+    image: ghcr.io/ramo-dev/s3explorer:latest
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -252,8 +254,8 @@ Backend runs on :3000, frontend on :5173.
 
 ### License
 
-MIT
+MIT — see [LICENSE.md](LICENSE.md), copyright (c) 2026 Subrato Mandal. That notice is retained unmodified; forking, modifying and redistributing under the same terms is exactly what it permits.
 
-Created by [@subratomandal](https://github.com/subratomandal)
+Original work by [@subratomandal](https://github.com/subratomandal) — [upstream](https://github.com/subratomandal/s3explorer). Thank you.
 
 </small>
