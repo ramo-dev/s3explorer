@@ -1,9 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import { X, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize } from 'lucide-react';
+import { cn } from 'cn';
 import type { S3Object } from '../types';
 import { getFileName, getPreviewType } from '../utils/fileUtils';
 import { getProxyUrl } from '../api';
 import { formatBytes } from '../utils/formatters';
+import { Button } from './ui/button';
+import { Dialog, DialogOverlay, DialogPortal, DialogTitle } from './ui/dialog';
+import { Spinner } from './ui/spinner';
 
 interface FilePreviewModalProps {
     object: S3Object | null;
@@ -19,6 +24,13 @@ const ZOOM_MIN = 0.1;
 const ZOOM_MAX = 10;
 const ZOOM_BUTTON_FACTOR = 1.3; // 30% per click
 
+// Floating prev/next controls that sit on top of the media, so they are styled
+// for a dark backdrop rather than as surface controls. The old .preview-nav-arrow
+// carried a [data-theme="light"] override, but the backdrop is always black/85,
+// so on a light theme those arrows were black/50 on near-black -- less visible
+// than the white/12 they override. One style for both themes is the fix.
+const NAV_ARROW_CLASSES = 'absolute z-10 rounded-full border border-white/15 bg-white/12 text-white backdrop-blur-[8px] transition-colors hover:bg-white/20 hover:text-white';
+
 export function FilePreviewModal({ object, bucket, onClose, onDownload, objects, startIndex }: FilePreviewModalProps) {
     const [textContent, setTextContent] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -27,6 +39,7 @@ export function FilePreviewModal({ object, bucket, onClose, onDownload, objects,
     const [currentIndex, setCurrentIndex] = useState(startIndex ?? 0);
     const [zoom, setZoom] = useState(1);
     const imageContainerRef = useRef<HTMLDivElement>(null);
+    const popupRef = useRef<HTMLDivElement>(null);
 
     const isMulti = objects && objects.length > 0;
     const activeObject = isMulti ? objects[currentIndex] : object;
@@ -79,12 +92,13 @@ export function FilePreviewModal({ object, bucket, onClose, onDownload, objects,
     const zoomOut = useCallback(() => setZoom(z => Math.max(z / ZOOM_BUTTON_FACTOR, ZOOM_MIN)), []);
     const zoomReset = useCallback(() => setZoom(1), []);
 
-    // Keyboard and scroll lock
-    const stableOnClose = useCallback(() => onClose(), [onClose]);
+    // Arrow keys and zoom shortcuts. Escape and the body scroll lock are not
+    // handled here: the Dialog primitive owns both, and this listener used to
+    // reset body overflow to '' on cleanup, which would have unlocked the page
+    // behind any modal opened on top of the preview.
     useEffect(() => {
         if (!activeObject) return;
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') stableOnClose();
             if (isMulti) {
                 if (e.key === 'ArrowLeft') { e.preventDefault(); goToPrev(); }
                 if (e.key === 'ArrowRight') { e.preventDefault(); goToNext(); }
@@ -96,9 +110,8 @@ export function FilePreviewModal({ object, bucket, onClose, onDownload, objects,
             }
         };
         window.addEventListener('keydown', handleKeyDown);
-        document.body.style.overflow = 'hidden';
-        return () => { window.removeEventListener('keydown', handleKeyDown); document.body.style.overflow = ''; };
-    }, [activeObject, stableOnClose, isMulti, goToPrev, goToNext, previewType, zoomIn, zoomOut, zoomReset]);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [activeObject, isMulti, goToPrev, goToNext, previewType, zoomIn, zoomOut, zoomReset]);
 
     useEffect(() => {
         if (!activeObject || previewType !== 'image') return;
@@ -127,8 +140,10 @@ export function FilePreviewModal({ object, bucket, onClose, onDownload, objects,
         if (error) {
             return (
                 <div className="text-center p-8">
-                    <p className="text-foreground-muted">{error}</p>
-                    <button onClick={() => onDownload(activeObject)} className="btn btn-secondary mt-4">Download instead</button>
+                    <p className="text-muted-foreground">{error}</p>
+                    <Button onClick={() => onDownload(activeObject)} variant="secondary" className="mt-4">
+                        Download instead
+                    </Button>
                 </div>
             );
         }
@@ -138,16 +153,13 @@ export function FilePreviewModal({ object, bucket, onClose, onDownload, objects,
                 return (
                     <div ref={imageContainerRef} className="flex items-center justify-center w-full h-full overflow-auto">
                         {!imageLoaded && (
-                            <svg className="w-6 h-6 animate-spin text-foreground-muted absolute" viewBox="0 0 24 24" fill="none">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                            </svg>
+                            <Spinner className="size-6 text-muted-foreground" aria-hidden="true" />
                         )}
                         <img
                             src={proxyUrl}
                             alt={fileName}
                             decoding="async"
-                            className={`rounded ${imageLoaded ? '' : 'hidden'}`}
+                            className={cn('rounded', !imageLoaded && 'hidden')}
                             style={{
                                 transform: `scale(${zoom})`,
                                 transformOrigin: 'center center',
@@ -179,12 +191,12 @@ export function FilePreviewModal({ object, bucket, onClose, onDownload, objects,
             case 'audio':
                 return (
                     <div className="flex flex-col items-center justify-center gap-4 p-8">
-                        <div className="w-24 h-24 rounded-full bg-background-tertiary flex items-center justify-center">
-                            <svg className="w-10 h-10 text-accent-purple" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <div className="size-24 rounded-full bg-muted flex items-center justify-center">
+                            <svg className="size-10 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                                 <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
                             </svg>
                         </div>
-                        <p className="text-sm text-foreground-secondary">{fileName}</p>
+                        <p className="text-sm text-muted-foreground">{fileName}</p>
                         {/* Same remount trick as <video> above -- see comment there. */}
                         <audio key={activeObject.key} controls autoPlay className="w-full max-w-md" onError={() => setError('Failed to load audio')}>
                             <source src={proxyUrl} />
@@ -196,10 +208,7 @@ export function FilePreviewModal({ object, bucket, onClose, onDownload, objects,
                 if (loading) {
                     return (
                         <div className="flex items-center justify-center h-full">
-                            <svg className="w-6 h-6 animate-spin text-foreground-muted" viewBox="0 0 24 24" fill="none">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                            </svg>
+                            <Spinner className="size-6 text-muted-foreground" />
                         </div>
                     );
                 }
@@ -215,112 +224,130 @@ export function FilePreviewModal({ object, bucket, onClose, onDownload, objects,
             default:
                 return (
                     <div className="text-center p-8">
-                        <p className="text-foreground-muted">Preview not available for this file type</p>
-                        <button onClick={() => onDownload(activeObject)} className="btn btn-secondary mt-4">Download</button>
+                        <p className="text-muted-foreground">Preview not available for this file type</p>
+                        <Button onClick={() => onDownload(activeObject)} variant="secondary" className="mt-4">
+                            Download
+                        </Button>
                     </div>
                 );
         }
     };
 
     return (
-        <div
-            className="fixed inset-0 z-60 flex flex-col bg-black/85 backdrop-blur-xs"
-            onClick={onClose}
-            role="dialog"
-            aria-modal="true"
-            aria-label={`Preview: ${fileName}`}
-        >
-            {/* Header */}
-            <div
-                className="flex items-center justify-between px-3 sm:px-4 py-2 bg-background-secondary border-b border-border shrink-0"
-                onClick={e => e.stopPropagation()}
-            >
-                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                    <h3 className="text-sm font-medium truncate text-foreground">{fileName}</h3>
-                    {activeObject.size > 0 && (
-                        <span className="text-xs text-foreground-muted shrink-0 hidden sm:inline">{formatBytes(activeObject.size)}</span>
-                    )}
-                    {isMulti && (
-                        <span className="text-xs text-foreground-muted shrink-0 tabular-nums">
-                            {currentIndex + 1}/{totalCount}
-                        </span>
-                    )}
-                </div>
-                <div className="flex items-center gap-0.5 shrink-0">
-                    {/* Zoom controls - images only */}
-                    {previewType === 'image' && imageLoaded && (
-                        <>
-                            <button onClick={(e) => { e.stopPropagation(); zoomOut(); }} className="btn btn-ghost btn-icon w-9 h-9 sm:w-8 sm:h-8" aria-label="Zoom out" disabled={zoom <= ZOOM_MIN}>
-                                <ZoomOut className="w-4 h-4" />
-                            </button>
-                            <button onClick={(e) => { e.stopPropagation(); zoomReset(); }} className="btn btn-ghost btn-icon w-9 h-9 sm:w-8 sm:h-8" aria-label="Reset zoom">
-                                <Maximize className="w-4 h-4" />
-                            </button>
-                            <button onClick={(e) => { e.stopPropagation(); zoomIn(); }} className="btn btn-ghost btn-icon w-9 h-9 sm:w-8 sm:h-8" aria-label="Zoom in" disabled={zoom >= ZOOM_MAX}>
-                                <ZoomIn className="w-4 h-4" />
-                            </button>
-                            <div className="w-px h-5 bg-border mx-0.5" />
-                        </>
-                    )}
-                    <button onClick={(e) => { e.stopPropagation(); onDownload(activeObject); }} className="btn btn-ghost btn-icon w-9 h-9 sm:w-8 sm:h-8" aria-label="Download file">
-                        <Download className="w-4 h-4" />
-                    </button>
-                    <button onClick={onClose} className="btn btn-ghost btn-icon w-9 h-9 sm:w-8 sm:h-8" aria-label="Close preview">
-                        <X className="w-4 h-4" />
-                    </button>
-                </div>
-            </div>
-
-            {/* Content area with navigation arrows */}
-            <div
-                className="flex-1 flex items-center justify-center overflow-hidden min-h-0 relative"
-                onClick={e => e.stopPropagation()}
-            >
-                {/* Left arrow */}
-                {isMulti && hasPrev && (
-                    <button
-                        onClick={goToPrev}
-                        className="preview-nav-arrow absolute left-1.5 sm:left-3 z-10"
-                        aria-label="Previous file"
-                    >
-                        <ChevronLeft className="w-5 h-5" />
-                    </button>
-                )}
-
-                {/* Preview content */}
-                <div className={`flex-1 flex items-center justify-center h-full p-2 sm:p-6 min-w-0 ${isMulti ? 'mx-10 sm:mx-14' : ''}`}>
-                    {renderPreview()}
-                </div>
-
-                {/* Right arrow */}
-                {isMulti && hasNext && (
-                    <button
-                        onClick={goToNext}
-                        className="preview-nav-arrow absolute right-1.5 sm:right-3 z-10"
-                        aria-label="Next file"
-                    >
-                        <ChevronRight className="w-5 h-5" />
-                    </button>
-                )}
-            </div>
-
-            {/* Bottom bar for multi-file mode */}
-            {isMulti && (
-                <div
-                    className="flex items-center justify-center gap-4 px-3 py-2 bg-background-secondary border-t border-border shrink-0"
-                    onClick={e => e.stopPropagation()}
+        <Dialog open={!!activeObject} onOpenChange={(open) => { if (!open) onClose(); }}>
+            <DialogPortal>
+                <DialogOverlay className="bg-black/85 backdrop-blur-xs" />
+                {/* The popup is the entire viewport, so it fills what the overlay
+                    is there to do: there is no click-outside area, which matches
+                    the previous behaviour where every region had stopPropagation
+                    and only the X button or Escape actually dismissed. It also
+                    gains the focus trap the hand-rolled version never had, so Tab
+                    no longer walks into the page behind the preview. */}
+                <DialogPrimitive.Popup
+                    ref={popupRef}
+                    className="fixed inset-0 z-50 flex flex-col outline-none"
+                    initialFocus={popupRef}
                 >
-                    <button onClick={goToPrev} disabled={!hasPrev} className="text-xs text-foreground-secondary hover:text-foreground disabled:opacity-30 transition-colors flex items-center gap-1">
-                        <ChevronLeft className="w-3.5 h-3.5" />Prev
-                    </button>
-                    <span className="text-xs text-foreground-muted tabular-nums">
-                        {currentIndex + 1} of {totalCount}
-                    </span>
-                    <button onClick={goToNext} disabled={!hasNext} className="text-xs text-foreground-secondary hover:text-foreground disabled:opacity-30 transition-colors flex items-center gap-1">
-                        Next<ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                </div>
-            )}
-        </div>
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-3 sm:px-4 py-2 bg-card border-b border-border shrink-0">
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                            <DialogTitle className="text-sm font-medium truncate text-foreground">{fileName}</DialogTitle>
+                            {activeObject.size > 0 && (
+                                <span className="text-xs text-muted-foreground shrink-0 hidden sm:inline">{formatBytes(activeObject.size)}</span>
+                            )}
+                            {isMulti && (
+                                <span className="text-xs text-muted-foreground shrink-0 tabular-nums">
+                                    {currentIndex + 1}/{totalCount}
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-0.5 shrink-0">
+                            {/* Zoom controls - images only */}
+                            {previewType === 'image' && imageLoaded && (
+                                <>
+                                    <Button onClick={zoomOut} variant="ghost" size="icon-lg" aria-label="Zoom out" disabled={zoom <= ZOOM_MIN}>
+                                        <ZoomOut className="size-4" aria-hidden="true" />
+                                    </Button>
+                                    <Button onClick={zoomReset} variant="ghost" size="icon-lg" aria-label="Reset zoom">
+                                        <Maximize className="size-4" aria-hidden="true" />
+                                    </Button>
+                                    <Button onClick={zoomIn} variant="ghost" size="icon-lg" aria-label="Zoom in" disabled={zoom >= ZOOM_MAX}>
+                                        <ZoomIn className="size-4" aria-hidden="true" />
+                                    </Button>
+                                    <div className="w-px h-5 bg-border mx-0.5" aria-hidden="true" />
+                                </>
+                            )}
+                            <Button onClick={() => onDownload(activeObject)} variant="ghost" size="icon-lg" aria-label="Download file">
+                                <Download className="size-4" aria-hidden="true" />
+                            </Button>
+                            <Button onClick={onClose} variant="ghost" size="icon-lg" aria-label="Close preview">
+                                <X className="size-4" aria-hidden="true" />
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Content area with navigation arrows */}
+                    <div className="flex-1 flex items-center justify-center overflow-hidden min-h-0 relative">
+                        {/* Left arrow */}
+                        {isMulti && hasPrev && (
+                            <Button
+                                onClick={goToPrev}
+                                variant="ghost"
+                                size="icon-lg"
+                                className={cn(NAV_ARROW_CLASSES, 'left-1.5 sm:left-3')}
+                                aria-label="Previous file"
+                            >
+                                <ChevronLeft className="size-5" aria-hidden="true" />
+                            </Button>
+                        )}
+
+                        {/* Preview content */}
+                        <div className={cn('flex-1 flex items-center justify-center h-full p-2 sm:p-6 min-w-0', isMulti && 'mx-10 sm:mx-14')}>
+                            {renderPreview()}
+                        </div>
+
+                        {/* Right arrow */}
+                        {isMulti && hasNext && (
+                            <Button
+                                onClick={goToNext}
+                                variant="ghost"
+                                size="icon-lg"
+                                className={cn(NAV_ARROW_CLASSES, 'right-1.5 sm:right-3')}
+                                aria-label="Next file"
+                            >
+                                <ChevronRight className="size-5" aria-hidden="true" />
+                            </Button>
+                        )}
+                    </div>
+
+                    {/* Bottom bar for multi-file mode */}
+                    {isMulti && (
+                        <div className="flex items-center justify-center gap-4 px-3 py-2 bg-card border-t border-border shrink-0">
+                            <Button
+                                onClick={goToPrev}
+                                disabled={!hasPrev}
+                                variant="ghost"
+                                size="sm"
+                                className="text-xs text-muted-foreground hover:text-foreground"
+                            >
+                                <ChevronLeft className="size-3.5" aria-hidden="true" />Prev
+                            </Button>
+                            <span className="text-xs text-muted-foreground tabular-nums">
+                                {currentIndex + 1} of {totalCount}
+                            </span>
+                            <Button
+                                onClick={goToNext}
+                                disabled={!hasNext}
+                                variant="ghost"
+                                size="sm"
+                                className="text-xs text-muted-foreground hover:text-foreground"
+                            >
+                                Next<ChevronRight className="size-3.5" aria-hidden="true" />
+                            </Button>
+                        </div>
+                    )}
+                </DialogPrimitive.Popup>
+            </DialogPortal>
+        </Dialog>
     );
 }
