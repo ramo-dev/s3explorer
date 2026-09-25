@@ -5,22 +5,22 @@
   <meta charset="UTF-8" />
   <link rel="icon" type="image/png" href="/s3e.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#13121a" media="(prefers-color-scheme: dark)" />
-  <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
   <meta name="description" content="Secure, self-hosted S3 file explorer for managing buckets and objects" />
   <title>S3 Explorer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@100..900&display=swap"
     rel="stylesheet" />
   <style>
     /* Critical CSS - prevents flash of wrong color.
        Must match --background in the [data-theme="dark"] block of index.css
-       (oklch(0.1450 0.0028 247.4358)), or the app flashes light before the
-       stylesheet loads. */
+       (oklch(0.145 0 0)), or the app flashes light before the stylesheet
+       loads. */
     html, body, #root {
-      background-color: oklch(0.1450 0.0028 247.4358);
+      background-color: oklch(0.145 0 0);
       min-height: 100%;
       margin: 0;
       padding: 0;
