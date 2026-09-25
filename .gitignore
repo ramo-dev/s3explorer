@@ -5,6 +5,12 @@ node_modules/
 # Build outputs
 dist/
 build/
+*.tsbuildinfo
+
+# Emitted JS from vite.config.ts (kept out of the root so it can't shadow the
+# real vite.config.ts -- Vite resolves .js before .ts).
+vite.config.js
+vite.config.d.ts
 
 # Environment files
 .env
