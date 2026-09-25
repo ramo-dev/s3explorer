@@ -1,4 +1,5 @@
-import { Spinner } from './Spinner';
+import { Spinner } from './ui/spinner';
+import { Progress } from './ui/progress';
 
 interface UploadProgressProps {
     uploading: boolean;
@@ -16,7 +17,7 @@ export function UploadProgress({ uploading, progress }: UploadProgressProps) {
             aria-label={`Uploading files: ${progress}% complete`}
         >
             <div className="flex items-center gap-3">
-                <Spinner className="w-4 h-4 text-accent-pink" label="Uploading" />
+                <Spinner className="text-primary" aria-label="Uploading" />
 
                 <div className="flex-1">
                     <div className="flex items-center justify-between mb-1.5">
@@ -24,18 +25,11 @@ export function UploadProgress({ uploading, progress }: UploadProgressProps) {
                         <span className="text-sm text-foreground-muted tabular-nums">{progress}%</span>
                     </div>
 
-                    <div
-                        className="progress-bar"
-                        role="progressbar"
-                        aria-valuenow={progress}
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                    >
-                        <div
-                            className="progress-fill"
-                            style={{ width: `${progress}%` }}
-                        />
-                    </div>
+                    <Progress
+                        className="gap-0"
+                        value={progress}
+                        aria-label={`Uploading files: ${progress}% complete`}
+                    />
                 </div>
             </div>
         </div>

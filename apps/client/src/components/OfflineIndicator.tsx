@@ -1,4 +1,5 @@
 import { WifiOff, RefreshCw } from 'lucide-react';
+import { Button } from './ui/button';
 
 interface OfflineIndicatorProps {
     isOnline: boolean;
@@ -23,17 +24,19 @@ export function OfflineIndicator({ isOnline, isBackendReachable }: OfflineIndica
             role="alert"
             aria-live="assertive"
         >
-            <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-accent-red/15 border border-accent-red/20 shadow-lg backdrop-blur-xs">
-                <WifiOff className="w-4 h-4 text-accent-red shrink-0" />
-                <span className="text-xs sm:text-sm text-foreground font-medium">{message}</span>
-                <button
+            <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-destructive/15 border border-destructive/20 text-foreground shadow-lg backdrop-blur-xs">
+                <WifiOff className="text-destructive shrink-0" aria-hidden="true" />
+                <span className="text-xs sm:text-sm font-medium">{message}</span>
+                <Button
                     onClick={handleRetry}
-                    className="flex items-center gap-1 sm:gap-1.5 text-xs text-accent-red hover:text-accent-red/80 transition-colors ml-1 sm:ml-2"
+                    variant="link"
+                    size="sm"
+                    className="ml-1 sm:ml-2 text-destructive hover:text-destructive/80"
                     aria-label="Retry connection"
                 >
-                    <RefreshCw className="w-3 h-3" />
+                    <RefreshCw aria-hidden="true" />
                     Retry
-                </button>
+                </Button>
             </div>
         </div>
     );
