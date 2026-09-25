@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check:legacy": "node scripts/legacy-usage.mjs src",
+    "check:utilities": "node scripts/check-utilities.mjs",
+    "check:tokens": "node scripts/dump-theme-tokens.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

@@ -1,6 +1,9 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Database, Plus, Trash2, Copy, Check, Settings, LogOut, Sun, Moon, PanelLeftClose, PanelLeft, X } from 'lucide-react';
+import { cn } from 'cn';
 import { GithubIcon } from './GithubIcon';
+import { Button, buttonVariants } from './ui/button';
+import { Input } from './ui/input';
 import type { Bucket } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
 import { UI_DELAYS } from '../constants';
@@ -104,28 +107,28 @@ export function Sidebar({
                     <span className="font-semibold text-sm whitespace-nowrap">S3 Explorer</span>
                 </div>
                 <div className="flex items-center">
-                    <button onClick={onToggleTheme} className="p-2 text-foreground-muted hover:text-foreground transition-colors" tabIndex={collapsed ? -1 : 0} aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}>
-                        {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                    </button>
-                    <button onClick={onToggleCollapse} className="p-2 text-foreground-muted hover:text-foreground transition-colors hidden md:flex items-center justify-center" aria-label="Collapse sidebar">
-                        <PanelLeftClose className="w-4 h-4" />
-                    </button>
-                    <button onClick={onCloseSidebar} className="p-2 text-foreground-muted hover:text-foreground transition-colors flex md:hidden items-center justify-center" aria-label="Close sidebar">
-                        <X className="w-4 h-4" />
-                    </button>
+                    <Button onClick={onToggleTheme} variant="ghost" size="icon-sm" className="text-muted-foreground" tabIndex={collapsed ? -1 : 0} aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}>
+                        {theme === 'dark' ? <Sun /> : <Moon />}
+                    </Button>
+                    <Button onClick={onToggleCollapse} variant="ghost" size="icon-sm" className="hidden md:inline-flex text-muted-foreground" aria-label="Collapse sidebar">
+                        <PanelLeftClose />
+                    </Button>
+                    <Button onClick={onCloseSidebar} variant="ghost" size="icon-sm" className="inline-flex md:hidden text-muted-foreground" aria-label="Close sidebar">
+                        <X />
+                    </Button>
                 </div>
             </div>
 
             {/* Search */}
             <div className="px-2.5 pt-2.5 pb-1 shrink-0">
-                <input
+                <Input
                     id={`${idPrefix}-bucket-search`}
                     type="search"
                     name="bucket-search"
                     placeholder={selectedBucket ? "Search files…" : "Search buckets…"}
                     value={localSearch}
                     onChange={e => setLocalSearch(e.target.value)}
-                    className="input h-8 text-xs rounded-md!"
+                    className="h-8 text-xs"
                     tabIndex={collapsed ? -1 : 0}
                     aria-label={selectedBucket ? 'Search files' : 'Search buckets'}
                     autoComplete="off"
@@ -136,11 +139,11 @@ export function Sidebar({
 
             {/* Buckets header */}
             <div className="flex items-center justify-between pl-[18px] pr-1.5 py-1.5 shrink-0">
-                <span className="text-xs font-semibold text-foreground-muted uppercase tracking-wider" id={`${idPrefix}-buckets-heading`}>Buckets</span>
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" id={`${idPrefix}-buckets-heading`}>Buckets</span>
                 {!pinnedBucket && (
-                    <button onClick={onNewBucket} className="create-bucket-btn p-1.5 text-foreground-secondary hover:text-foreground transition-all" tabIndex={collapsed ? -1 : 0} aria-label="Create new bucket">
-                        <Plus className="w-3.5 h-3.5" />
-                    </button>
+                    <Button onClick={onNewBucket} variant="ghost" size="icon-sm" className="create-bucket-btn text-muted-foreground" tabIndex={collapsed ? -1 : 0} aria-label="Create new bucket">
+                        <Plus />
+                    </Button>
                 )}
             </div>
 
@@ -150,7 +153,7 @@ export function Sidebar({
                     {filteredBuckets.map((bucket, i) => (
                         <div
                             key={bucket.name}
-                            className={`sidebar-item group stagger-item h-8 rounded! ${selectedBucket === bucket.name ? 'active' : ''}`}
+                            className={cn('sidebar-item group stagger-item h-8 rounded-md', selectedBucket === bucket.name && 'active')}
                             style={{ animationDelay: `${i * 30}ms` }}
                             onClick={() => onBucketSelect(bucket.name)}
                             onKeyDown={(e) => e.key === 'Enter' && onBucketSelect(bucket.name)}
@@ -159,43 +162,49 @@ export function Sidebar({
                             aria-selected={selectedBucket === bucket.name}
                             aria-label={`Bucket: ${bucket.name}`}
                         >
-                            <Database className="sidebar-icon w-3.5 h-3.5 shrink-0" />
+                            <Database className="sidebar-icon size-3.5 shrink-0" />
                             <span className="flex-1 truncate text-xs">{bucket.name}</span>
                             <div className="flex items-center gap-0.5 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                                <button onClick={e => handleCopyBucketName(e, bucket.name)} className="flex items-center justify-center w-6 h-6 rounded text-foreground-secondary hover:text-accent-purple active:scale-95 transition-all" tabIndex={collapsed ? -1 : 0} aria-label={`Copy: ${bucket.name}`}>
-                                    {copiedBucket === bucket.name ? <Check className="w-3 h-3 text-accent-green" /> : <Copy className="w-3 h-3" />}
-                                </button>
+                                <Button onClick={e => handleCopyBucketName(e, bucket.name)} variant="ghost" size="icon-xs" className="text-muted-foreground hover:text-primary" tabIndex={collapsed ? -1 : 0} aria-label={`Copy: ${bucket.name}`}>
+                                    {copiedBucket === bucket.name ? <Check className="text-accent-green" /> : <Copy />}
+                                </Button>
                                 {!pinnedBucket && (
-                                    <button onClick={e => { e.stopPropagation(); onDeleteBucket(bucket.name); }} className="flex items-center justify-center w-6 h-6 rounded text-foreground-secondary hover:text-accent-red active:scale-95 transition-all" tabIndex={collapsed ? -1 : 0} aria-label={`Delete: ${bucket.name}`}>
-                                        <Trash2 className="w-3 h-3" />
-                                    </button>
+                                    <Button onClick={e => { e.stopPropagation(); onDeleteBucket(bucket.name); }} variant="ghost" size="icon-xs" className="text-muted-foreground hover:text-destructive" tabIndex={collapsed ? -1 : 0} aria-label={`Delete: ${bucket.name}`}>
+                                        <Trash2 />
+                                    </Button>
                                 )}
                             </div>
                         </div>
                     ))}
                 </div>
                 {filteredBuckets.length === 0 && !loading && (
-                    <div className="py-8 text-center"><p className="text-sm text-foreground-muted">{debouncedSearch ? 'No matches' : 'No buckets'}</p></div>
+                    <div className="py-8 text-center"><p className="text-sm text-muted-foreground">{debouncedSearch ? 'No matches' : 'No buckets'}</p></div>
                 )}
             </div>
 
             {/* Bottom section */}
             <div className="shrink-0 border-t border-border px-2.5 py-1.5 pb-safe">
                 {onOpenConnections && (
-                    <button onClick={onOpenConnections} className="w-full flex items-center gap-2 h-8 px-2.5 text-foreground-muted hover:text-foreground text-xs transition-colors cursor-pointer" tabIndex={collapsed ? -1 : 0}>
-                        <Settings className="w-3.5 h-3.5 shrink-0" />
+                    <Button onClick={onOpenConnections} variant="ghost" size="sm" className="h-8 w-full justify-start px-2.5 text-xs text-muted-foreground" tabIndex={collapsed ? -1 : 0}>
+                        <Settings className="size-3.5 shrink-0" />
                         <span className="flex-1 truncate text-left">{activeConnectionName || 'Connections'}</span>
-                    </button>
+                    </Button>
                 )}
-                <a href="https://github.com/ramo-dev/s3explorer" target="_blank" rel="noopener noreferrer" className="w-full flex items-center gap-2 h-8 px-2.5 text-foreground-muted hover:text-foreground text-xs transition-colors" tabIndex={collapsed ? -1 : 0}>
-                    <GithubIcon className="w-3.5 h-3.5 shrink-0" />
+                <a
+                    href="https://github.com/ramo-dev/s3explorer"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'h-8 w-full justify-start px-2.5 text-xs text-muted-foreground')}
+                    tabIndex={collapsed ? -1 : 0}
+                >
+                    <GithubIcon className="size-3.5 shrink-0" />
                     <span>GitHub</span>
                 </a>
                 {onLogout && (
-                    <button onClick={onLogout} className="w-full flex items-center gap-2 h-8 px-2.5 text-foreground-muted hover:text-accent-red text-xs transition-colors cursor-pointer" tabIndex={collapsed ? -1 : 0}>
-                        <LogOut className="w-3.5 h-3.5 shrink-0" />
+                    <Button onClick={onLogout} variant="ghost" size="sm" className="h-8 w-full justify-start px-2.5 text-xs text-muted-foreground hover:text-destructive" tabIndex={collapsed ? -1 : 0}>
+                        <LogOut className="size-3.5 shrink-0" />
                         <span>Logout</span>
-                    </button>
+                    </Button>
                 )}
             </div>
         </>
@@ -204,49 +213,59 @@ export function Sidebar({
     // ── Collapsed icon strip content ──
     const collapsedContent = (
         <div className="flex flex-col items-center h-full py-1.5 gap-0.5">
-            <button onClick={onToggleCollapse} className="w-8 h-8 flex items-center justify-center text-foreground-muted hover:text-foreground transition-colors shrink-0" aria-label="Expand sidebar" title="Expand sidebar">
-                <PanelLeft className="w-4 h-4" />
-            </button>
-            <button onClick={onNavigateHome} className="w-8 h-8 flex items-center justify-center my-0.5 shrink-0" aria-label="Home" title="S3 Explorer">
-                <img src="/logo.svg" alt="S3 Explorer" className="w-5 h-5 logo-themed" />
-            </button>
+            <Button onClick={onToggleCollapse} variant="ghost" size="icon-sm" className="shrink-0 text-muted-foreground" aria-label="Expand sidebar" title="Expand sidebar">
+                <PanelLeft />
+            </Button>
+            <Button onClick={onNavigateHome} variant="ghost" size="icon-sm" className="my-0.5 shrink-0" aria-label="Home" title="S3 Explorer">
+                <img src="/logo.svg" alt="S3 Explorer" className="size-5 logo-themed" />
+            </Button>
             {!pinnedBucket && (
-                <button onClick={onNewBucket} className="w-8 h-8 flex items-center justify-center text-foreground-muted hover:text-foreground transition-colors shrink-0" aria-label="Create bucket" title="Create bucket">
-                    <Plus className="w-3.5 h-3.5" />
-                </button>
+                <Button onClick={onNewBucket} variant="ghost" size="icon-sm" className="create-bucket-btn shrink-0 text-muted-foreground" aria-label="Create bucket" title="Create bucket">
+                    <Plus className="size-3.5" />
+                </Button>
             )}
             <div className="w-5 h-px bg-border my-0.5 shrink-0" />
             <div className="flex-1 flex flex-col items-center gap-px overflow-y-auto min-h-0 bucket-scrollable w-full px-1">
                 {buckets.map(bucket => (
-                    <button
+                    <Button
                         key={bucket.name}
                         onClick={() => onBucketSelect(bucket.name)}
-                        className={`w-8 h-8 flex items-center justify-center rounded transition-colors shrink-0 ${
-                            selectedBucket === bucket.name ? 'text-accent-pink bg-accent-pink/10' : 'text-foreground-muted hover:text-foreground'
-                        }`}
+                        variant="ghost"
+                        size="icon-sm"
+                        className={cn(
+                            'shrink-0',
+                            selectedBucket === bucket.name ? 'text-primary bg-primary/10' : 'text-muted-foreground'
+                        )}
                         aria-label={`Bucket: ${bucket.name}`}
                         title={bucket.name}
                     >
-                        <Database className="w-3.5 h-3.5" />
-                    </button>
+                        <Database className="size-3.5" />
+                    </Button>
                 ))}
             </div>
             <div className="w-5 h-px bg-border my-0.5 shrink-0" />
-            <button onClick={onToggleTheme} className="w-8 h-8 flex items-center justify-center text-foreground-muted hover:text-foreground transition-colors shrink-0" aria-label={theme === 'dark' ? 'Light mode' : 'Dark mode'} title={theme === 'dark' ? 'Light mode' : 'Dark mode'}>
-                {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-            </button>
+            <Button onClick={onToggleTheme} variant="ghost" size="icon-sm" className="shrink-0 text-muted-foreground" aria-label={theme === 'dark' ? 'Light mode' : 'Dark mode'} title={theme === 'dark' ? 'Light mode' : 'Dark mode'}>
+                {theme === 'dark' ? <Sun className="size-3.5" /> : <Moon className="size-3.5" />}
+            </Button>
             {onOpenConnections && (
-                <button onClick={onOpenConnections} className="w-8 h-8 flex items-center justify-center text-foreground-muted hover:text-foreground transition-colors shrink-0" aria-label="Connections" title={activeConnectionName || 'Connections'}>
-                    <Settings className="w-3.5 h-3.5" />
-                </button>
+                <Button onClick={onOpenConnections} variant="ghost" size="icon-sm" className="shrink-0 text-muted-foreground" aria-label="Connections" title={activeConnectionName || 'Connections'}>
+                    <Settings className="size-3.5" />
+                </Button>
             )}
-            <a href="https://github.com/ramo-dev/s3explorer" target="_blank" rel="noopener noreferrer" className="w-8 h-8 flex items-center justify-center text-foreground-muted hover:text-foreground transition-colors shrink-0" aria-label="GitHub" title="GitHub">
-                <GithubIcon className="w-3.5 h-3.5" />
+            <a
+                href="https://github.com/ramo-dev/s3explorer"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(buttonVariants({ variant: 'ghost', size: 'icon-sm' }), 'shrink-0 text-muted-foreground')}
+                aria-label="GitHub"
+                title="GitHub"
+            >
+                <GithubIcon className="size-3.5" />
             </a>
             {onLogout && (
-                <button onClick={onLogout} className="w-8 h-8 flex items-center justify-center text-foreground-muted hover:text-accent-red transition-colors shrink-0" aria-label="Logout" title="Logout">
-                    <LogOut className="w-3.5 h-3.5" />
-                </button>
+                <Button onClick={onLogout} variant="ghost" size="icon-sm" className="shrink-0 text-muted-foreground hover:text-destructive" aria-label="Logout" title="Logout">
+                    <LogOut className="size-3.5" />
+                </Button>
             )}
         </div>
     );
