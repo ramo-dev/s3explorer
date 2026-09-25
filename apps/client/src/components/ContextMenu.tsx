@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { cn } from 'cn';
 
 interface ContextMenuProps {
     x: number;
@@ -7,6 +8,13 @@ interface ContextMenuProps {
     children: React.ReactNode;
 }
 
+// Surface classes mirror shadcn's ContextMenuContent so this menu is visually
+// identical to any other popup in the app, but positioning stays imperative:
+// the menu is opened from an onContextMenu handler on a row deep in the tree
+// rather than from a wrapped trigger. Base UI's Menu can only anchor to a real
+// trigger element, so driving it from {x, y} would mean a hidden virtual
+// trigger per open. Converting this to the full primitive is worth doing, but
+// it needs browser verification rather than a typecheck.
 export function ContextMenu({ x, y, onClose, children }: ContextMenuProps) {
     const ref = useRef<HTMLDivElement>(null);
 
@@ -16,17 +24,26 @@ export function ContextMenu({ x, y, onClose, children }: ContextMenuProps) {
                 onClose();
             }
         };
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+        };
         window.addEventListener('mousedown', handleClick);
-        return () => window.removeEventListener('mousedown', handleClick);
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('mousedown', handleClick);
+            window.removeEventListener('keydown', handleKeyDown);
+        };
     }, [onClose]);
 
-    const adjustedX = Math.min(x, window.innerWidth - 180);
-    const adjustedY = Math.min(y, window.innerHeight - 160);
+    // Keep the menu on screen. Clamped to 0 on both axes so a right-click near
+    // the top-left corner cannot push it off-viewport.
+    const adjustedX = Math.max(0, Math.min(x, window.innerWidth - 180));
+    const adjustedY = Math.max(0, Math.min(y, window.innerHeight - 160));
 
     return (
         <div
             ref={ref}
-            className="fixed z-50 card py-1 min-w-[150px] context-menu"
+            className="fixed z-50 min-w-[150px] origin-top-left rounded-md bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 animate-in fade-in-0 zoom-in-95"
             style={{ left: adjustedX, top: adjustedY }}
             role="menu"
             aria-label="Context menu"
@@ -44,17 +61,19 @@ interface ContextMenuItemProps {
 }
 
 export function ContextMenuItem({ icon: Icon, label, onClick, danger = false }: ContextMenuItemProps) {
-    const colorClasses = danger
-        ? 'text-accent-red hover:bg-accent-red/15'
-        : 'text-foreground-secondary hover:bg-background-hover hover:text-foreground';
-
     return (
         <button
+            type="button"
             onClick={onClick}
-            className={`context-menu-item w-full flex items-center gap-2.5 px-3 py-1.5 text-xs ${colorClasses}`}
+            className={cn(
+                'w-full flex cursor-default items-center gap-2.5 rounded-sm px-3 py-1.5 text-xs select-none transition-colors outline-none',
+                danger
+                    ? 'text-destructive hover:bg-destructive/10 focus-visible:bg-destructive/10'
+                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground',
+            )}
             role="menuitem"
         >
-            <Icon className="w-4 h-4" aria-hidden="true" />
+            <Icon className="size-4" aria-hidden="true" />
             {label}
         </button>
     );

@@ -64,6 +64,7 @@
   --color-accent-pink: var(--accent-pink);
   --color-accent-purple: var(--accent-purple);
   --color-accent-green: var(--accent-green);
+  --color-success: var(--success);
   --color-accent-blue: var(--accent-blue);
   --color-accent-yellow: var(--accent-yellow);
   --color-accent-red: var(--accent-red);
@@ -274,6 +275,7 @@ html {
   --accent-pink: #9333ea;
   --accent-purple: #7c3aed;
   --accent-green: #16a34a;
+  --success: #16a34a;
   --accent-blue: #2563eb;
   --accent-yellow: #ca8a04;
   --accent-red: #dc2626;
@@ -360,6 +362,7 @@ html {
   --accent-pink: #c049ff;
   --accent-purple: #9333ea;
   --accent-green: #4ade80;
+  --success: #4ade80;
   --accent-blue: #3b82f6;
   --accent-yellow: #facc15;
   --accent-red: #ef4444;

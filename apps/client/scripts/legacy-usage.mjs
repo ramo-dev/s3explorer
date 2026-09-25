@@ -31,6 +31,11 @@ const SHADCN_TOKENS = new Set([
   "shadow-opacity", "shadow-color", "shadow-2xs", "shadow-xs", "shadow-sm",
   "shadow", "shadow-md", "shadow-lg", "shadow-xl", "shadow-2xl",
   "tracking-normal", "spacing",
+  // Not a shadcn token, but a deliberate permanent extension rather than a
+  // pre-shadcn holdover, so it must not be reported as pending migration.
+  // shadcn has no success colour; the app needs one for "Active" and
+  // success toasts. Kept alongside the shadcn set so it is never counted.
+  "success",
 ]);
 
 const css = fs.readFileSync(cssFile, "utf8");

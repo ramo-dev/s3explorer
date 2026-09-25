@@ -11,6 +11,9 @@ import {
   Home,
   ChevronRight,
 } from 'lucide-react';
+import { cn } from 'cn';
+import { Input } from './ui/input';
+import { Kbd, KbdGroup } from './ui/kbd';
 import type { Bucket, CommandAction } from '../types';
 
 interface CommandPaletteProps {
@@ -214,83 +217,79 @@ export function CommandPalette({
   }, [filteredActions, selectedIndex, onClose]);
 
   // Flatten grouped actions into a single indexed list so keyboard navigation
-  // (ArrowUp/ArrowDown) can use a simple linear index across all groups.
-  const flatList = useMemo(() => {
-    const result: { action: CommandAction; category: string; index: number }[] = [];
+  // (ArrowUp/ArrowDown) can use a simple linear index across all groups. The
+  // map keyed by action id is what the row renderer looks up; scanning the flat
+  // list per row instead made rendering quadratic in the number of buckets.
+  const indexByActionId = useMemo(() => {
+    const map = new Map<string, number>();
     let idx = 0;
-    Object.entries(groupedActions).forEach(([category, items]) => {
-      items.forEach(action => {
-        result.push({ action, category, index: idx });
-        idx++;
-      });
-    });
-    return result;
+    for (const items of Object.values(groupedActions)) {
+      for (const action of items) map.set(action.id, idx++);
+    }
+    return map;
   }, [groupedActions]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-100 flex items-start justify-center pt-[15vh] p-4 command-palette-backdrop animate-fade-in" onClick={onClose}>
+    <div className="fixed inset-0 z-100 flex items-start justify-center pt-[15vh] p-4 bg-black/70 backdrop-blur-[8px] animate-fade-in" onClick={onClose}>
       <div
-        className="w-full max-w-lg bg-background-secondary border border-border rounded-lg shadow-2xl overflow-hidden command-palette-content"
+        className="w-full max-w-lg bg-popover text-popover-foreground border border-border rounded-lg shadow-2xl overflow-hidden animate-in fade-in-0 zoom-in-95"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
-          <Search className="w-5 h-5 text-foreground-muted shrink-0" />
-          <input
+          <Search className="size-5 text-muted-foreground shrink-0" />
+          {/* Input carries a border, shadow and md:text-sm by default; this
+              field sits inside a bordered surface, so all three are reset. */}
+          <Input
             ref={inputRef}
             type="text"
-            className="flex-1 bg-transparent border-none text-base text-foreground placeholder:text-foreground-muted"
-            style={{ outline: 'none', boxShadow: 'none' }}
+            className="h-auto flex-1 border-0 bg-transparent px-0 py-0 shadow-none text-base md:text-base focus-visible:border-0 focus-visible:ring-0 dark:bg-transparent"
             placeholder="Type a command or search..."
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
           />
-          <kbd className="hidden sm:flex items-center gap-0.5 px-1.5 py-0.5 text-xs font-medium text-foreground-muted bg-background-tertiary border border-border rounded">
-            <span>esc</span>
-          </kbd>
+          <Kbd className="hidden sm:inline-flex" aria-hidden="true">esc</Kbd>
         </div>
 
         <div ref={listRef} className="max-h-80 overflow-y-auto p-2">
           {filteredActions.length === 0 ? (
-            <div className="py-8 text-center text-foreground-muted text-sm">
+            <div className="py-8 text-center text-muted-foreground text-sm">
               No results found for "{query}"
             </div>
           ) : (
             Object.entries(groupedActions).map(([category, items]) => (
               <div key={category} className="mb-2 last:mb-0">
-                <div className="px-2 py-1.5 text-xs font-semibold text-foreground-muted uppercase tracking-wide">
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   {categoryLabels[category] || category}
                 </div>
                 {items.map(action => {
-                  const itemData = flatList.find(f => f.action.id === action.id);
-                  const itemIndex = itemData?.index ?? 0;
+                  const itemIndex = indexByActionId.get(action.id) ?? 0;
                   const isSelected = itemIndex === selectedIndex;
                   return (
                     <button
+                      type="button"
                       key={action.id}
                       data-index={itemIndex}
-                      className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-left transition-colors ${isSelected
-                        ? 'bg-accent-pink/15 text-foreground'
-                        : 'text-foreground-secondary hover:bg-background-hover hover:text-foreground'
-                        }`}
+                      className={cn(
+                        'w-full flex cursor-default items-center gap-2.5 px-2.5 py-2 rounded-md text-left transition-colors',
+                        isSelected
+                          ? 'bg-accent text-accent-foreground'
+                          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+                      )}
                       onClick={action.onSelect}
                       onMouseEnter={() => setSelectedIndex(itemIndex)}
                     >
-                      <action.icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-accent-pink' : ''}`} />
+                      <action.icon className={cn('size-4 shrink-0', isSelected && 'text-primary')} />
                       <span className="flex-1 text-sm font-medium truncate">{action.label}</span>
-                      {action.shortcut && (
-                        <kbd className="px-1.5 py-0.5 text-xs font-medium text-foreground-muted bg-background-tertiary border border-border rounded">
-                          {action.shortcut}
-                        </kbd>
-                      )}
+                      {action.shortcut && <Kbd aria-hidden="true">{action.shortcut}</Kbd>}
                       {category === 'buckets' && selectedBucket === action.label && (
-                        <span className="px-1.5 py-0.5 text-xs font-medium bg-accent-green/20 text-accent-green rounded">
+                        <span className="px-1.5 py-0.5 text-xs font-medium bg-success/20 text-success rounded">
                           Active
                         </span>
                       )}
-                      <ChevronRight className={`w-4 h-4 transition-transform ${isSelected ? 'text-accent-pink translate-x-0.5' : 'text-foreground-muted'}`} />
+                      <ChevronRight className={cn('size-4 transition-transform', isSelected ? 'text-primary translate-x-0.5' : 'text-muted-foreground')} />
                     </button>
                   );
                 })}
@@ -299,20 +298,19 @@ export function CommandPalette({
           )}
         </div>
 
-        <div className="px-4 py-2.5 border-t border-border bg-background flex items-center justify-between text-xs text-foreground-muted">
+        <div className="px-4 py-2.5 border-t border-border bg-muted/50 flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1">
-              <kbd className="px-1 py-0.5 bg-background-tertiary border border-border rounded text-xs">↑</kbd>
-              <kbd className="px-1 py-0.5 bg-background-tertiary border border-border rounded text-xs">↓</kbd>
+            <span className="hidden sm:flex items-center gap-1">
+              <KbdGroup><Kbd>↑</Kbd><Kbd>↓</Kbd></KbdGroup>
               <span className="ml-1">Navigate</span>
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-background-tertiary border border-border rounded text-xs">↵</kbd>
+              <Kbd>↵</Kbd>
               <span className="ml-1">Select</span>
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <kbd className="px-1 py-0.5 bg-background-tertiary border border-border rounded text-xs">{isMac ? '⌘' : 'Ctrl'}</kbd>
+            <Kbd>{isMac ? '⌘' : 'Ctrl'}</Kbd>
             <span>K to open</span>
           </div>
         </div>
