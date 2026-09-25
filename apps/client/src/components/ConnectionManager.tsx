@@ -1,9 +1,27 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, Check, Server, ChevronDown, AlertCircle, RefreshCw, ChevronRight, Pencil } from 'lucide-react';
+import { Plus, Check, Server, ChevronDown, AlertCircle, RefreshCw, ChevronRight, Pencil, Trash2 } from 'lucide-react';
+import { cn } from 'cn';
 import * as api from '../api';
 import type { Connection, ConnectionConfig } from '../api';
 import { Modal } from './Modal';
-import { useEscapeKey } from '../hooks/useEscapeKey';
+import { Alert, AlertDescription } from './ui/alert';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from './ui/alert-dialog';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { Checkbox } from './ui/checkbox';
+import { Field, FieldError, FieldLabel } from './ui/field';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Spinner } from './ui/spinner';
 
 // Provider Presets
 const PROVIDERS = [
@@ -143,6 +161,22 @@ function getRegionsForProvider(providerId: string) {
   }
 }
 
+// Provider and region stay native <select> elements rather than the Select
+// primitive. This app is mobile-first, and the OS picker is better on touch than
+// a custom popup list; a native select is also keyboard and screen-reader
+// accessible for free. The classes mirror Input so the two read as one control.
+const SELECT_CLASSES = [
+  'h-10 w-full min-w-0 appearance-none cursor-pointer rounded-md border border-input bg-transparent',
+  'px-2.5 py-1 pr-10 text-sm shadow-xs transition-[color,box-shadow] outline-none',
+  'focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50',
+  'disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+  'dark:bg-input/30',
+].join(' ');
+
+// Dense label used throughout the form, which is a two-column grid rather than
+// a stack of full-width fields.
+const FIELD_LABEL_CLASSES = 'text-xs font-normal leading-none text-muted-foreground';
+
 interface ConnectionManagerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -159,7 +193,6 @@ export function ConnectionManager({ isOpen, onClose, onConnectionChange }: Conne
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
-  useEscapeKey(() => setDeleteConfirm(null), deleteConfirm !== null);
   const [bucketTouched, setBucketTouched] = useState(false);
   const [customRegion, setCustomRegion] = useState(false);
   const [regionTouched, setRegionTouched] = useState(false);
@@ -198,7 +231,7 @@ export function ConnectionManager({ isOpen, onClose, onConnectionChange }: Conne
     try {
       const data = await api.listConnections();
       setConnections(data);
-    } catch (err: any) {
+    } catch {
       setError('Failed to load connections');
     } finally {
       setLoading(false);
@@ -313,11 +346,6 @@ export function ConnectionManager({ isOpen, onClose, onConnectionChange }: Conne
     }
   }, [deleteConfirm, onConnectionChange]);
 
-  function handleDelete(e: React.MouseEvent, id: number) {
-    e.stopPropagation();
-    setDeleteConfirm(id);
-  }
-
   async function handleActivate(id: number) {
     try {
       await api.activateConnection(id);
@@ -329,8 +357,7 @@ export function ConnectionManager({ isOpen, onClose, onConnectionChange }: Conne
     }
   }
 
-  function startEdit(e: React.MouseEvent, conn: Connection) {
-    e.stopPropagation();
+  function startEdit(conn: Connection) {
     setForm({
       name: conn.name,
       endpoint: conn.endpoint,
@@ -349,109 +376,116 @@ export function ConnectionManager({ isOpen, onClose, onConnectionChange }: Conne
     setView('form');
   }
 
+  const bucketError = bucketTouched ? validateBucketName(form.bucket || '', selectedProvider) : null;
+  const regionError = regionTouched && customRegion ? validateRegion(form.region || '') : null;
+
   return (
     <>
-      {/* Delete Confirmation Overlay - Full screen */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 z-100 modal-backdrop flex items-center justify-center p-4">
-          <div className="bg-background-secondary border border-border rounded-lg p-5 max-w-sm w-full shadow-2xl animate-scaleIn">
-            <h3 className="text-lg font-semibold text-foreground mb-3">Delete Connection</h3>
-            <p className="text-sm text-foreground-secondary mb-6">
+      <AlertDialog open={deleteConfirm !== null} onOpenChange={(open) => { if (!open) setDeleteConfirm(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Connection</AlertDialogTitle>
+            <AlertDialogDescription>
               This action cannot be undone.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="btn btn-secondary flex-1"
-                autoFocus
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="btn btn-danger flex-1"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="flex-1">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} variant="destructive" className="flex-1">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Modal isOpen={isOpen} onClose={onClose} title="Connection Manager" size="lg">
         <div className="relative flex flex-col">
 
           {error && (
-            <div className="mb-4 p-3 bg-accent-red/15 rounded-md text-accent-red text-[13px] flex items-center gap-2 animate-fade-in">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              {error}
-            </div>
+            <Alert variant="destructive" className="mb-4 bg-destructive/15 py-3 text-[13px]">
+              <AlertCircle aria-hidden="true" />
+              <AlertDescription className="text-destructive">{error}</AlertDescription>
+            </Alert>
           )}
 
           {view === 'list' ? (
             <div className="animate-fade-in">
               <div className="space-y-2">
                 {loading ? (
-                  <div className="flex items-center justify-center py-8 text-foreground-muted">
-                    <RefreshCw className="w-5 h-5 animate-spin mr-2" />
+                  <div className="flex items-center justify-center py-8 text-muted-foreground">
+                    <Spinner className="size-5 mr-2" />
                     Loading...
                   </div>
                 ) : connections.length === 0 ? (
-                  <div className="text-center py-6 border border-dashed border-border rounded-md bg-background hover:border-accent-purple/30 hover:bg-accent-purple/5 transition-all cursor-pointer group" onClick={() => { resetForm(); setView('form'); }}>
-                    <Server className="w-8 h-8 mx-auto mb-2 text-foreground-muted group-hover:text-accent-purple transition-colors" />
-                    <p className="text-foreground-secondary font-medium text-sm group-hover:text-accent-purple transition-colors">No connections</p>
-                    <p className="text-foreground-muted text-xs mt-1">Click to add your first connection</p>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { resetForm(); setView('form'); }}
+                    className="group w-full cursor-pointer rounded-md border border-dashed border-border bg-card py-6 text-center transition-all hover:border-primary/30 hover:bg-primary/5"
+                  >
+                    <Server className="size-8 mx-auto mb-2 text-muted-foreground transition-colors group-hover:text-primary" />
+                    <p className="text-sm font-medium text-muted-foreground transition-colors group-hover:text-primary">No connections</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Click to add your first connection</p>
+                  </button>
                 ) : (
                   connections.map((conn) => (
+                    // The row is a plain container so the edit and delete buttons
+                    // are siblings of the activate button rather than nested
+                    // inside it; nesting interactive elements inside a button is
+                    // invalid and made the row unreachable by keyboard.
                     <div
                       key={conn.id}
-                      onClick={() => handleActivate(conn.id)}
-                      className={`group relative flex items-center justify-between p-3 rounded-md! bg-background-tertiary transition-all cursor-pointer overflow-hidden ${conn.isActive ? 'ring-1 ring-accent-purple' : 'hover:bg-accent-purple/5'
-                        }`}
+                      className={cn(
+                        'group relative flex items-center justify-between overflow-hidden rounded-md bg-muted transition-all',
+                        conn.isActive ? 'ring-1 ring-primary' : 'hover:bg-primary/5',
+                      )}
                     >
                       {/* Left accent border */}
-                      <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-lg transition-colors ${conn.isActive ? 'bg-accent-purple' : 'bg-transparent group-hover:bg-accent-purple/50'}`} />
+                      <div className={cn('absolute left-0 top-0 bottom-0 w-1 transition-colors', conn.isActive ? 'bg-primary' : 'bg-transparent group-hover:bg-primary/50')} />
 
-                      <div className="flex items-center gap-3 min-w-0 pl-2 flex-1">
-                        <div className={`w-9 h-9 rounded-md shrink-0 flex items-center justify-center transition-colors ${conn.isActive ? 'bg-accent-purple/20 text-accent-purple' : 'bg-background-hover text-foreground-muted group-hover:bg-accent-purple/10 group-hover:text-accent-purple'
-                          }`}>
-                          <Server className="w-4 h-4" />
+                      <button
+                        type="button"
+                        onClick={() => handleActivate(conn.id)}
+                        className="flex min-w-0 flex-1 items-center gap-3 py-3 pl-4 pr-2 text-left"
+                      >
+                        <div className={cn('flex size-9 shrink-0 items-center justify-center rounded-md transition-colors', conn.isActive ? 'bg-primary/20 text-primary' : 'bg-accent text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary')}>
+                          <Server className="size-4" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <span className={`font-medium text-base sm:text-sm truncate transition-colors ${conn.isActive ? 'text-foreground' : 'text-foreground group-hover:text-accent-purple'}`}>
+                            <span className={cn('truncate text-base font-medium transition-colors sm:text-sm', conn.isActive ? 'text-foreground' : 'text-foreground group-hover:text-primary')}>
                               {conn.name}
                             </span>
                             {conn.isActive && (
-                              <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-accent-green/20 text-accent-green">
-                                Active
-                              </span>
+                              <Badge className="bg-success/20 text-success">Active</Badge>
                             )}
                           </div>
-                          <p className="text-[11px] text-foreground-muted font-mono truncate mt-0.5" title={conn.endpoint}>
+                          <p className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground" title={conn.endpoint}>
                             {conn.endpoint || 'https://s3.amazonaws.com'}
-                            {conn.bucket && <span className="text-accent-purple"> / {conn.bucket}</span>}
+                            {conn.bucket && <span className="text-primary"> / {conn.bucket}</span>}
                           </p>
                         </div>
-                      </div>
+                      </button>
 
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          onClick={(e) => startEdit(e, conn)}
-                          className="p-1.5 text-foreground-muted hover:text-accent-purple rounded transition-colors"
-                          title="Edit"
+                      <div className="flex shrink-0 items-center gap-1 pr-3">
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => startEdit(conn)}
+                          className="text-muted-foreground hover:text-primary"
+                          aria-label={`Edit ${conn.name}`}
                         >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={(e) => handleDelete(e, conn.id)}
-                          className="p-1.5 text-foreground-muted hover:text-accent-red rounded transition-colors"
-                          title="Delete"
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => setDeleteConfirm(conn.id)}
+                          className="text-muted-foreground hover:text-destructive"
+                          aria-label={`Delete ${conn.name}`}
                         >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                        <ChevronRight className="w-4 h-4 text-foreground-muted group-hover:text-accent-purple group-hover:translate-x-0.5 transition-all ml-1" />
+                          <Trash2 className="size-4" />
+                        </Button>
+                        <ChevronRight className="ml-1 size-4 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
                       </div>
                     </div>
                   ))
@@ -459,74 +493,75 @@ export function ConnectionManager({ isOpen, onClose, onConnectionChange }: Conne
               </div>
 
               {connections.length > 0 && (
-                <button
+                <Button
+                  variant="outline"
                   onClick={() => { resetForm(); setView('form'); }}
-                  className="group w-full mt-3 py-2.5 px-4 rounded-md border border-dashed border-border text-foreground-secondary hover:text-accent-purple hover:border-accent-purple hover:bg-accent-purple/5 transition-all flex items-center justify-center gap-2 text-sm font-medium"
+                  className="group mt-3 w-full border-dashed text-sm hover:border-primary hover:bg-primary/5 hover:text-primary"
                 >
-                  <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  <Plus className="size-4 transition-transform group-hover:scale-110" />
                   Add Connection
-                </button>
+                </Button>
               )}
             </div>
           ) : (
-            <div className="flex-1 flex flex-col">
+            <div className="flex flex-1 flex-col">
               <div className="space-y-3">
                 {/* Provider Selector */}
-                <div className="space-y-1.5">
-                  <label htmlFor="conn-provider" className="text-xs text-foreground-muted leading-none block">Provider</label>
+                <Field className="gap-1.5">
+                  <FieldLabel htmlFor="conn-provider" className={FIELD_LABEL_CLASSES}>Provider</FieldLabel>
                   <div className="relative">
                     <select
                       id="conn-provider"
                       value={selectedProvider}
                       onChange={(e) => handleProviderChange(e.target.value)}
-                      className="input appearance-none cursor-pointer pr-10 h-10 text-sm"
+                      className={SELECT_CLASSES}
                     >
                       {PROVIDERS.map(p => (
                         <option key={p.id} value={p.id}>{p.name}</option>
                       ))}
                     </select>
-                    <ChevronDown className="w-4 h-4 text-foreground-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                   </div>
-                </div>
+                </Field>
 
                 {/* Profile Name & Region Row */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label htmlFor="conn-name" className="text-xs text-foreground-muted leading-none block">Profile Name</label>
-                    <input
+                  <Field className="gap-1.5">
+                    <FieldLabel htmlFor="conn-name" className={FIELD_LABEL_CLASSES}>Profile Name</FieldLabel>
+                    <Input
                       id="conn-name"
                       type="text"
                       value={form.name}
                       onChange={(e) => setForm({ ...form, name: e.target.value })}
                       placeholder="Production…"
-                      className="input h-10 text-sm"
+                      className="h-10 text-sm"
                       autoComplete="off"
                       spellCheck="false"
                     />
-                  </div>
-                  <div className="space-y-1.5 min-w-0">
-                    <div className="flex items-center justify-between h-3">
-                      <label htmlFor="conn-region" className="text-xs text-foreground-muted leading-none block">Region</label>
+                  </Field>
+                  <Field className="min-w-0 gap-1.5">
+                    <div className="flex h-3 items-center justify-between">
+                      <FieldLabel htmlFor="conn-region" className={FIELD_LABEL_CLASSES}>Region</FieldLabel>
                       {customRegion && (
                         <button
                           type="button"
                           onClick={() => handleRegionChange(PROVIDERS.find(p => p.id === selectedProvider)?.defaultRegion || 'us-east-1')}
-                          className="text-[11px] text-foreground-muted hover:text-accent-purple leading-none transition-colors"
+                          className="text-[11px] leading-none text-muted-foreground transition-colors hover:text-primary"
                         >
                           Use list
                         </button>
                       )}
                     </div>
                     {customRegion ? (
-                      <input
+                      <Input
                         id="conn-region"
                         type="text"
                         value={form.region || ''}
                         onChange={(e) => { setRegionTouched(true); setForm({ ...form, region: e.target.value }); }}
                         onBlur={() => setRegionTouched(true)}
                         placeholder="e.g. garage"
-                        className="input font-mono h-10 text-sm"
-                        aria-invalid={!!(regionTouched && validateRegion(form.region || ''))}
+                        className="h-10 font-mono text-sm"
+                        aria-invalid={!!regionError}
                         autoFocus
                         autoComplete="off"
                         spellCheck="false"
@@ -537,138 +572,131 @@ export function ConnectionManager({ isOpen, onClose, onConnectionChange }: Conne
                           id="conn-region"
                           value={form.region}
                           onChange={(e) => handleRegionChange(e.target.value)}
-                          className="input appearance-none cursor-pointer pr-10 h-10 text-sm truncate"
+                          className={cn(SELECT_CLASSES, 'truncate')}
                         >
                           {getRegionsForProvider(selectedProvider).map(r => (
                             <option key={r.value} value={r.value}>{r.label}</option>
                           ))}
                           <option value={CUSTOM_REGION}>Custom…</option>
                         </select>
-                        <ChevronDown className="w-4 h-4 text-foreground-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                       </div>
                     )}
-                    {customRegion && regionTouched && validateRegion(form.region || '') && (
-                      <p className="text-[11px] text-accent-red leading-tight">
-                        {validateRegion(form.region || '')}
-                      </p>
+                    {regionError && (
+                      <FieldError className="text-[11px] leading-tight">{regionError}</FieldError>
                     )}
-                  </div>
+                  </Field>
                 </div>
 
                 {/* Endpoint */}
-                <div className="space-y-1.5">
-                  <label htmlFor="conn-endpoint" className="text-xs text-foreground-muted leading-none block">S3 Endpoint</label>
-                  <input
+                <Field className="gap-1.5">
+                  <FieldLabel htmlFor="conn-endpoint" className={FIELD_LABEL_CLASSES}>S3 Endpoint</FieldLabel>
+                  <Input
                     id="conn-endpoint"
                     type="url"
                     value={form.endpoint}
                     onChange={(e) => setForm({ ...form, endpoint: e.target.value })}
                     placeholder="https://s3.amazonaws.com…"
-                    className="input font-mono h-9 text-sm"
+                    className="h-9 font-mono text-sm"
                     autoComplete="off"
                     spellCheck="false"
                   />
-                </div>
+                </Field>
 
                 {/* Bucket Name - required for single-bucket providers like GCS */}
-                <div className="space-y-1.5">
-                  <label htmlFor="conn-bucket" className="text-xs text-foreground-muted leading-none block">
+                <Field className="gap-1.5">
+                  <FieldLabel htmlFor="conn-bucket" className={FIELD_LABEL_CLASSES}>
                     Bucket Name {selectedProvider !== 'gcs' && <span className="opacity-50">(optional)</span>}
-                  </label>
-                  <input
+                  </FieldLabel>
+                  <Input
                     id="conn-bucket"
                     type="text"
                     value={form.bucket || ''}
                     onChange={(e) => { setBucketTouched(true); setForm({ ...form, bucket: e.target.value }); }}
                     onBlur={() => setBucketTouched(true)}
                     placeholder={selectedProvider === 'gcs' ? 'my-bucket-name' : 'Leave empty to list all buckets'}
-                    className="input h-9 text-sm"
-                    aria-invalid={!!(bucketTouched && validateBucketName(form.bucket || '', selectedProvider))}
+                    className="h-9 text-sm"
+                    aria-invalid={!!bucketError}
                     autoComplete="off"
                     spellCheck="false"
                   />
-                  {bucketTouched && validateBucketName(form.bucket || '', selectedProvider) && (
-                    <p className="text-[11px] text-accent-red leading-tight">
-                      {validateBucketName(form.bucket || '', selectedProvider)}
-                    </p>
+                  {bucketError && (
+                    <FieldError className="text-[11px] leading-tight">{bucketError}</FieldError>
                   )}
-                </div>
+                </Field>
 
                 {/* Keys Row */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label htmlFor="conn-access-key" className="text-xs text-foreground-muted leading-none block">Access Key</label>
-                    <input
+                  <Field className="gap-1.5">
+                    <FieldLabel htmlFor="conn-access-key" className={FIELD_LABEL_CLASSES}>Access Key</FieldLabel>
+                    <Input
                       id="conn-access-key"
                       type="text"
                       value={form.accessKey}
                       onChange={(e) => setForm({ ...form, accessKey: e.target.value })}
                       placeholder="AKIA…"
-                      className="input font-mono h-10 text-sm"
+                      className="h-10 font-mono text-sm"
                       autoComplete="off"
                       spellCheck="false"
                     />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label htmlFor="conn-secret-key" className="text-xs text-foreground-muted leading-none block">Secret Key</label>
-                    <input
+                  </Field>
+                  <Field className="gap-1.5">
+                    <FieldLabel htmlFor="conn-secret-key" className={FIELD_LABEL_CLASSES}>Secret Key</FieldLabel>
+                    <Input
                       id="conn-secret-key"
                       type="password"
                       value={form.secretKey}
                       onChange={(e) => setForm({ ...form, secretKey: e.target.value })}
                       placeholder="••••••••"
-                      className="input font-mono h-10 text-sm"
+                      className="h-10 font-mono text-sm"
                       autoComplete="off"
                     />
-                  </div>
+                  </Field>
                 </div>
 
                 {/* Path Style & Test */}
                 <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <span
-                      className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${form.forcePathStyle
-                        ? 'bg-accent-purple border-accent-purple'
-                        : 'border-border bg-transparent group-hover:border-border-hover'
-                        }`}
-                      aria-hidden="true"
-                    >
-                      {form.forcePathStyle && <Check className="w-3 h-3 text-white" aria-hidden="true" />}
-                    </span>
-                    <input
-                      type="checkbox"
+                  {/* Checkbox and Label are siblings rather than nested: a
+                      <button role=checkbox> inside a <label> would activate
+                      twice, once from the label and once from the control. */}
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="conn-path-style"
                       checked={form.forcePathStyle}
-                      onChange={(e) => setForm({ ...form, forcePathStyle: e.target.checked })}
-                      className="sr-only"
+                      onCheckedChange={(checked) => setForm({ ...form, forcePathStyle: checked })}
                     />
-                    <span className="text-xs text-foreground-muted leading-none group-hover:text-foreground transition-colors">Path-style URLs</span>
-                  </label>
+                    <Label htmlFor="conn-path-style" className="cursor-pointer text-xs leading-none text-muted-foreground transition-colors hover:text-foreground">
+                      Path-style URLs
+                    </Label>
+                  </div>
 
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={handleTest}
                     disabled={testing || !form.endpoint || (!editingId && (!form.accessKey || !form.secretKey))}
-                    className="group text-xs text-foreground-muted hover:text-accent-purple transition-colors flex items-center gap-1.5 disabled:opacity-50 px-2 py-1 rounded hover:bg-accent-purple/10"
+                    className="group gap-1.5 px-2 text-xs text-muted-foreground hover:bg-primary/10 hover:text-primary"
                     aria-label="Test connection"
                   >
-                    <RefreshCw className={`w-3 h-3 ${testing ? 'animate-spin' : 'group-hover:rotate-45'} transition-transform`} aria-hidden="true" />
+                    <RefreshCw className={cn('size-3 transition-transform', testing ? 'animate-spin' : 'group-hover:rotate-45')} aria-hidden="true" />
                     {testing ? 'Testing…' : 'Test'}
-                  </button>
+                  </Button>
                 </div>
 
                 {/* Test Result */}
                 {testResult && (
                   <div
-                    className={`p-3 rounded-md text-[13px] flex items-center gap-2 border border-border ${testResult.success
-                      ? 'bg-accent-green/15 text-accent-green'
-                      : 'bg-accent-red/15 text-accent-red'
-                      }`}
+                    className={cn(
+                      'flex items-center gap-2 rounded-md border border-border p-3 text-[13px]',
+                      testResult.success ? 'bg-success/15 text-success' : 'bg-destructive/15 text-destructive',
+                    )}
                     role="status"
                     aria-live="polite"
                   >
                     {testResult.success ? (
-                      <Check className="w-4 h-4 shrink-0" aria-hidden="true" />
+                      <Check className="size-4 shrink-0" aria-hidden="true" />
                     ) : (
-                      <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
+                      <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
                     )}
                     {testResult.message}
                   </div>
@@ -676,20 +704,19 @@ export function ConnectionManager({ isOpen, onClose, onConnectionChange }: Conne
               </div>
 
               {/* Action Buttons */}
-              <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-border">
-                <button
+              <div className="mt-4 grid grid-cols-2 gap-2 border-t border-border pt-3">
+                <Button
+                  variant="secondary"
                   onClick={() => { setView('list'); setTestResult(null); }}
-                  className="py-2 px-3 rounded-md bg-background-tertiary text-foreground-secondary hover:text-foreground hover:bg-background-hover border border-border transition-all text-sm font-medium"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={handleSave}
                   disabled={saving || !form.name || !form.endpoint || !!validateBucketName(form.bucket || '', selectedProvider) || !!validateRegion(form.region || '')}
-                  className="py-2 px-3 rounded-md bg-accent-purple text-white hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium"
                 >
                   {saving ? 'Saving...' : 'Save'}
-                </button>
+                </Button>
               </div>
             </div>
           )}
