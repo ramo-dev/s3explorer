@@ -7,7 +7,13 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "db": "tsx src/cli/db.ts",
+    "db:info": "tsx src/cli/db.ts info",
+    "db:sql": "tsx src/cli/db.ts sql",
+    "db:backup": "tsx src/cli/db.ts backup",
+    "db:reset": "tsx src/cli/db.ts reset",
+    "db:nuke": "tsx src/cli/db.ts nuke"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.478.0",

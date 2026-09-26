@@ -13,7 +13,13 @@
     "build:client": "pnpm --filter s3-explorer-client build",
     "build:server": "pnpm --filter s3-explorer-server build",
     "start": "pnpm --filter s3-explorer-server start",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "db": "pnpm --filter s3-explorer-server db",
+    "db:info": "pnpm --filter s3-explorer-server db:info",
+    "db:sql": "pnpm --filter s3-explorer-server db:sql",
+    "db:backup": "pnpm --filter s3-explorer-server db:backup",
+    "db:reset": "pnpm --filter s3-explorer-server db:reset",
+    "db:nuke": "pnpm --filter s3-explorer-server db:nuke"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

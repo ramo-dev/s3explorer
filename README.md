@@ -167,6 +167,28 @@ npm run dev
 
 Backend runs on :3000, frontend on :5173.
 
+### Database Maintenance
+
+The server stores its SQLite database and AES-256-GCM encryption key in `DATA_DIR`. Both are reachable from a CLI that reads the same `DATA_DIR` the server does:
+
+```bash
+npm run db:info                  # paths, sizes, row counts, integrity check
+npm run db:sql "SELECT * FROM connections"
+npm run db:backup                # consistent snapshot, default name is timestamped
+npm run db:backup ./before.db    # ...or to a chosen path
+npm run db:reset                 # delete all rows; keeps schema + encryption key
+npm run db -- help
+```
+
+`db:info` is the one to reach for first. It resolves and prints every path, runs `PRAGMA integrity_check`, and shows per-table row counts.
+
+Two notes on `db:backup`:
+
+- It uses SQLite's online backup API rather than copying the file. The database runs in WAL mode, so committed writes can still be sitting in the `-wal` sidecar; a plain file copy silently omits them. Measured on a database with 4 MB of WAL, a file copy produced a backup missing 9 of 1000 rows.
+- A database backup is **not** a data-directory backup. The encrypted credentials in `connections` need `encryption.key` alongside the `.db` file, or they cannot be decrypted. The command warns about this every time.
+
+`db:reset` deletes every row but keeps the schema and the key, which is what you want to start over. Destructive commands prompt for confirmation and refuse to run without a TTY unless given `--yes`, so they cannot fire by accident in a pipeline or CI job.
+
 ### Environment Variables
 
 1. `APP_PASSWORD` (optional): Login password. Must be 12+ chars with upper, lower, number, special char. If not set, a setup wizard will appear on first launch to configure it.

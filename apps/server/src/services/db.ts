@@ -1,11 +1,9 @@
 import Database, { Database as DatabaseType, Statement } from 'better-sqlite3';
-import path from 'path';
 import fs from 'fs';
 import { EventEmitter } from 'events';
 import session from 'express-session';
 
-const DATA_DIR = process.env.DATA_DIR || '/data';
-const DB_PATH = path.join(DATA_DIR, 's3explorer.db');
+import { DATA_DIR, DB_PATH } from './data-dir.js';
 
 // Ensure data directory exists and is writable. Managed volumes (Railway, Fly, etc.)
 // are mounted root:root, so a non-root process would otherwise die with a cryptic

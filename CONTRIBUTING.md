@@ -44,6 +44,17 @@ npm run dev
 
 Backend on :3000, frontend on :5173, Vite proxies `/api` to Express
 
+### Database
+
+`DATA_DIR` holds a SQLite database and the AES-256-GCM key that encrypts stored S3 credentials. There is a CLI for it — see the Database Maintenance section of the README. The ones worth knowing while developing:
+
+```bash
+npm run db:info     # where the files are, row counts, integrity check
+npm run db:reset    # start over: empty tables, schema and key retained
+```
+
+It reads the same `DATA_DIR` as the server, so export it the same way.
+
 ### Before You Start
 
 1. Check existing [issues](https://github.com/ramo-dev/s3explorer/issues)
