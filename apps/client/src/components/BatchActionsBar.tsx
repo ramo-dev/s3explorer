@@ -1,4 +1,6 @@
 import { X } from 'lucide-react';
+import { cn } from 'cn';
+import { Button } from './ui/button';
 
 interface BatchActionsBarProps {
     selectedCount: number;
@@ -28,55 +30,70 @@ export function BatchActionsBar({
         ? 'Preparing…'
         : downloadMode === 'zip' ? 'Download .zip' : 'Download';
 
-    // Segmented bar: buttons sit flush inside a bordered container and are
-    // separated by hairlines, so they are not Button variants. One shared
-    // class keeps the five segments visually identical, which was previously
-    // copy-pasted five times.
-    const segment = 'text-xs font-medium px-3 py-2 transition-colors whitespace-nowrap';
+    // Segmented bar: the buttons sit flush inside a bordered container and are
+    // separated by hairlines, so each segment has to neutralise the Button
+    // primitive's own rounding, border and height. One shared class keeps them
+    // identical, which was previously copy-pasted five times.
+    //
+    // pointer-events-auto while disabled is deliberate: the primitive sets
+    // pointer-events-none, which would swallow the wait cursor that tells the
+    // user a zip is still being built.
+    const segment = cn(
+        'h-auto rounded-none border-0 px-3 py-2 text-xs font-medium whitespace-nowrap',
+        'disabled:pointer-events-auto',
+    );
 
     return (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 mb-safe animate-slide-up-fade">
             <div className="flex items-center gap-px overflow-hidden rounded-lg border border-border bg-border shadow-lg">
-                <span className={`${segment} bg-card text-muted-foreground`}>
+                <span className={cn(segment, 'bg-card text-muted-foreground')}>
                     {selectedCount} selected
                 </span>
 
                 {previewableCount > 0 && (
-                    <button
-                        type="button"
+                    <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={onPreviewSelected}
-                        className={`${segment} cursor-pointer bg-card text-muted-foreground hover:bg-accent hover:text-accent-foreground`}
+                        className={cn(segment, 'bg-card text-muted-foreground hover:bg-accent hover:text-accent-foreground')}
                     >
                         Preview
-                    </button>
+                    </Button>
                 )}
 
-                <button
-                    type="button"
+                <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={onDownloadSelected}
                     disabled={downloading}
                     aria-busy={downloading}
-                    className={`${segment} cursor-pointer bg-card text-muted-foreground hover:bg-accent hover:text-accent-foreground disabled:cursor-wait disabled:opacity-60`}
+                    className={cn(
+                        segment,
+                        'bg-card text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+                        'disabled:cursor-wait disabled:opacity-60',
+                    )}
                 >
                     {downloadLabel}
-                </button>
+                </Button>
 
-                <button
-                    type="button"
+                <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={onDeleteSelected}
-                    className={`${segment} cursor-pointer bg-card text-destructive hover:bg-destructive/10`}
+                    className={cn(segment, 'bg-card text-destructive hover:bg-destructive/10 hover:text-destructive')}
                 >
                     Delete
-                </button>
+                </Button>
 
-                <button
-                    type="button"
+                <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={onClearSelection}
-                    className="flex w-8 cursor-pointer items-center justify-center bg-card py-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                     aria-label="Clear selection"
+                    className={cn(segment, 'w-8 bg-card px-0 text-muted-foreground hover:bg-accent hover:text-foreground')}
                 >
                     <X className="size-3.5" aria-hidden="true" />
-                </button>
+                </Button>
             </div>
         </div>
     );

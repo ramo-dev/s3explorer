@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { forwardRef, useMemo } from 'react';
 import { ArrowDown, ArrowUp, CalendarDays, SlidersHorizontal, X } from 'lucide-react';
 import {
     CATEGORY_SAMPLE_KEY,
@@ -48,36 +48,47 @@ type SizeOrder = 'none' | 'asc' | 'desc';
 const labelFor = <T extends string>(options: readonly { value: T; label: string }[], value: T): string =>
     options.find(o => o.value === value)?.label ?? options[0].label;
 
-/** Trigger that reads as a label until a filter is set, then as its value. */
-function FilterTrigger({
-    label,
-    value,
-    active,
-    icon,
-    onClear,
-}: {
-    label: string;
-    value: string | null;
-    active: boolean;
-    icon: React.ReactNode;
-    onClear: () => void;
-}) {
+/**
+ * Trigger that reads as a label until a filter is set, then as its value.
+ *
+ * forwardRef and the prop spread are load-bearing, not boilerplate. This is
+ * handed to Base UI's `render` prop, which merges its own onClick, aria-*
+ * and ref into whatever it is given. A component that destructured its own
+ * props and ignored the rest would silently drop all of that, and the menu
+ * would never open -- with no error to explain why.
+ */
+const FilterTrigger = forwardRef<
+    HTMLButtonElement,
+    {
+        label: string;
+        // Not named `value`: Button already has a DOM `value`, and shadowing it
+        // with a nullable one is a type error waiting to happen.
+        valueLabel: string | null;
+        active: boolean;
+        icon: React.ReactNode;
+        onClear: () => void;
+    } & Omit<React.ComponentProps<typeof Button>, 'children'>
+>(function FilterTrigger({ label, valueLabel, active, icon, onClear, className, ...props }, ref) {
     return (
         <div className="relative">
             <Button
+                ref={ref}
                 variant="outline"
                 size="sm"
-                aria-label={value ? `${label}: ${value}` : label}
-                className={cn('pr-7', active && 'border-primary/60 bg-primary/10 text-foreground')}
+                aria-label={valueLabel ? `${label}: ${valueLabel}` : label}
+                className={cn('pr-7', active && 'border-primary/60 bg-primary/10 text-foreground', className)}
+                {...props}
             >
                 {icon}
-                <span className="max-w-36 truncate">{value ?? label}</span>
+                <span className="max-w-36 truncate">{valueLabel ?? label}</span>
             </Button>
             {active ? (
                 <button
                     type="button"
-                    // Stops the click reaching the trigger underneath, which
-                    // would reopen the menu the user just closed.
+                    // A sibling of the trigger, not a descendant, so this is not
+                    // nested interactive content. The stopPropagation is belt
+                    // and braces: the document-level dismiss that closes a menu
+                    // would otherwise reopen the one just closed.
                     onClick={event => {
                         event.stopPropagation();
                         onClear();
@@ -90,7 +101,7 @@ function FilterTrigger({
             ) : null}
         </div>
     );
-}
+});
 
 export function FilterBar({
     filters,
@@ -137,7 +148,7 @@ export function FilterBar({
                     render={
                         <FilterTrigger
                             label="Type"
-                            value={typeLabel}
+                            valueLabel={typeLabel}
                             active={filters.type !== 'all'}
                             icon={<SlidersHorizontal className="size-3.5" aria-hidden="true" />}
                             onClear={() => set('type', 'all')}
@@ -175,7 +186,7 @@ export function FilterBar({
                     render={
                         <FilterTrigger
                             label="Modified"
-                            value={modifiedLabel}
+                            valueLabel={modifiedLabel}
                             active={isDateRangeActive(range)}
                             icon={<CalendarDays className="size-3.5" aria-hidden="true" />}
                             onClear={() => set('modified', { from: null, to: null })}
@@ -239,7 +250,7 @@ export function FilterBar({
                     render={
                         <FilterTrigger
                             label="Size"
-                            value={sizeLabel}
+                            valueLabel={sizeLabel}
                             active={filters.size !== 'all' || sizeOrder !== 'none'}
                             icon={
                                 sizeOrder === 'asc' ? (
