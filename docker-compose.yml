@@ -4,16 +4,17 @@ services:
     image: minio/minio:latest
     container_name: s3explorer-minio
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9004:9004"
+      - "9005:9005"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
-    command: server /data --console-address ":9001"
+    # 9004 is the S3 API, 9005 is the console.
+    command: server /data --address ":9004" --console-address ":9005"
     volumes:
       - minio_data:/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: ["CMD", "curl", "-f", "http://localhost:9004/minio/health/live"]
       interval: 30s
       timeout: 20s
       retries: 3
@@ -22,7 +23,7 @@ services:
     build: .
     container_name: s3explorer
     ports:
-      - "3000:3000"
+      - "3008:3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
@@ -39,6 +40,15 @@ services:
 volumes:
   minio_data:
   app_data:
+#
+# Ports:
+#   app    3008 on the host -> 3000 in the container. PORT=3000 is baked into
+#          the Dockerfile, so the container always listens on 3000 and only the
+#          host side moves. A reverse proxy should target localhost:3008.
+#   minio  9004 S3 API, 9005 console. The app reaches MinIO on the compose
+#          network as http://minio:9004, which never touches the host
+#          interface -- so it cannot be defeated by hairpin NAT.
+#
 # Usage:
 # 1. Create .env file with:
 #    APP_PASSWORD=YourSecureP@ssw0rd!
