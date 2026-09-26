@@ -37,52 +37,52 @@
   so the helper is gone and these are plain references.
 */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
 
-  /*
+    /*
     shadcn has no success colour, but the app needs one: the "Active" badge on
     a connection, the tick on a valid password requirement, and success toasts.
     Declaring it here rather than reviving the old --accent-green keeps it
     themeable from one place like every other colour.
   */
-  --color-success: var(--success);
+    --color-success: var(--success);
 
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
-  --font-serif: var(--font-serif);
+    --font-sans: var(--font-sans);
+    --font-mono: var(--font-mono);
+    --font-serif: var(--font-serif);
 
-  /*
+    /*
     The shadcn preset derives these from --radius (0.625rem) but only shifts
     it for sm, leaving --radius-lg pinned at 0.5rem -- i.e. smaller than md, so
     rounded-lg would render tighter than rounded-md. Offsets are applied on
@@ -90,30 +90,30 @@
 
       sm 0.5rem < md 0.625rem < lg 0.75rem < xl 0.875rem < 2xl 1.125rem
   */
-  --radius-sm: calc(var(--radius) - 2px);
-  --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) + 2px);
-  --radius-xl: calc(var(--radius) + 6px);
+    --radius-sm: calc(var(--radius) - 2px);
+    --radius-md: var(--radius);
+    --radius-lg: calc(var(--radius) + 2px);
+    --radius-xl: calc(var(--radius) + 6px);
 
-  --shadow-2xs: var(--shadow-2xs);
-  --shadow-xs: var(--shadow-xs);
-  --shadow-sm: var(--shadow-sm);
-  --shadow: var(--shadow);
-  --shadow-md: var(--shadow-md);
-  --shadow-lg: var(--shadow-lg);
-  --shadow-xl: var(--shadow-xl);
-  --shadow-2xl: var(--shadow-2xl);
+    --shadow-2xs: var(--shadow-2xs);
+    --shadow-xs: var(--shadow-xs);
+    --shadow-sm: var(--shadow-sm);
+    --shadow: var(--shadow);
+    --shadow-md: var(--shadow-md);
+    --shadow-lg: var(--shadow-lg);
+    --shadow-xl: var(--shadow-xl);
+    --shadow-2xl: var(--shadow-2xl);
 
-  --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
-  --tracking-tight: calc(var(--tracking-normal) - 0.025em);
-  --tracking-normal: var(--tracking-normal);
-  --tracking-wide: calc(var(--tracking-normal) + 0.025em);
-  --tracking-wider: calc(var(--tracking-normal) + 0.05em);
-  --tracking-widest: calc(var(--tracking-normal) + 0.1em);
-  --font-heading: var(--font-sans);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+    --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
+    --tracking-tight: calc(var(--tracking-normal) - 0.025em);
+    --tracking-normal: var(--tracking-normal);
+    --tracking-wide: calc(var(--tracking-normal) + 0.025em);
+    --tracking-wider: calc(var(--tracking-normal) + 0.05em);
+    --tracking-widest: calc(var(--tracking-normal) + 0.1em);
+    --font-heading: var(--font-sans);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 /*
@@ -127,12 +127,12 @@
   are always emitted verbatim, so the reference here is one-directional and safe.
 */
 @theme {
-  --animate-fade-in: fadeIn 200ms ease;
-  --animate-slide-in: slideIn 200ms ease;
-  --animate-fade-in-up: fadeInUp 300ms cubic-bezier(0.16, 1, 0.3, 1);
-  --animate-fade-in-down: fadeInDown 300ms cubic-bezier(0.22, 1, 0.36, 1);
-  --animate-slide-in-right: slideInRight 300ms cubic-bezier(0.22, 1, 0.36, 1);
-  --animate-slide-up-fade: slideUpFade 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    --animate-fade-in: fadeIn 200ms ease;
+    --animate-slide-in: slideIn 200ms ease;
+    --animate-fade-in-up: fadeInUp 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    --animate-fade-in-down: fadeInDown 300ms cubic-bezier(0.22, 1, 0.36, 1);
+    --animate-slide-in-right: slideInRight 300ms cubic-bezier(0.22, 1, 0.36, 1);
+    --animate-slide-up-fade: slideUpFade 300ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /*
@@ -140,60 +140,60 @@
   is the fallback for the rare case the attribute is absent.
 */
 :root {
-  color-scheme: light;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.505 0.213 27.518);
-  --primary-foreground: oklch(0.971 0.013 17.38);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(1.0000 0 0);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.808 0.114 19.571);
-  --chart-2: oklch(0.637 0.237 25.331);
-  --chart-3: oklch(0.577 0.245 27.325);
-  --chart-4: oklch(0.505 0.213 27.518);
-  --chart-5: oklch(0.444 0.177 26.899);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.577 0.245 27.325);
-  --sidebar-primary-foreground: oklch(0.971 0.013 17.38);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  --font-sans: 'Outfit Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-serif: Georgia, serif;
-  --font-mono: 'JetBrains Mono Variable', ui-monospace, Menlo, monospace;
-  --radius: 0.625rem;
-  --shadow-x: 0px;
-  --shadow-y: 1px;
-  --shadow-blur: 4px;
-  --shadow-spread: 0px;
-  --shadow-opacity: 0.05;
-  --shadow-color: 0 0 0;
-  --shadow-2xs: 0px 1px 4px 0px hsl(0 0 0 / 0.03);
-  --shadow-xs: 0px 1px 4px 0px hsl(0 0 0 / 0.03);
-  --shadow-sm: 0px 1px 4px 0px hsl(0 0 0 / 0.05), 0px 1px 2px -1px hsl(0 0 0 / 0.05);
-  --shadow: 0px 1px 4px 0px hsl(0 0 0 / 0.05), 0px 1px 2px -1px hsl(0 0 0 / 0.05);
-  --shadow-md: 0px 1px 4px 0px hsl(0 0 0 / 0.05), 0px 2px 4px -1px hsl(0 0 0 / 0.05);
-  --shadow-lg: 0px 1px 4px 0px hsl(0 0 0 / 0.05), 0px 4px 6px -1px hsl(0 0 0 / 0.05);
-  --shadow-xl: 0px 1px 4px 0px hsl(0 0 0 / 0.05), 0px 8px 10px -1px hsl(0 0 0 / 0.05);
-  --shadow-2xl: 0px 1px 4px 0px hsl(0 0 0 / 0.13);
-  --tracking-normal: -0.01em;
-  --spacing: 0.26rem;
-  --success: #16a34a;
+    color-scheme: light;
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.505 0.213 27.518);
+    --primary-foreground: oklch(0.971 0.013 17.38);
+    --secondary: oklch(0.967 0.001 286.375);
+    --secondary-foreground: oklch(0.21 0.006 285.885);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(1.0000 0 0);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+    --chart-1: oklch(0.808 0.114 19.571);
+    --chart-2: oklch(0.637 0.237 25.331);
+    --chart-3: oklch(0.577 0.245 27.325);
+    --chart-4: oklch(0.505 0.213 27.518);
+    --chart-5: oklch(0.444 0.177 26.899);
+    --sidebar: oklch(0.985 0 0);
+    --sidebar-foreground: oklch(0.145 0 0);
+    --sidebar-primary: oklch(0.577 0.245 27.325);
+    --sidebar-primary-foreground: oklch(0.971 0.013 17.38);
+    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-border: oklch(0.922 0 0);
+    --sidebar-ring: oklch(0.708 0 0);
+    --font-sans: 'Outfit Variable', ui-sans-serif, system-ui, sans-serif;
+    --font-serif: Georgia, serif;
+    --font-mono: 'JetBrains Mono Variable', ui-monospace, Menlo, monospace;
+    --radius: 0.625rem;
+    --shadow-x: 0px;
+    --shadow-y: 1px;
+    --shadow-blur: 4px;
+    --shadow-spread: 0px;
+    --shadow-opacity: 0.05;
+    --shadow-color: 0 0 0;
+    --shadow-2xs: 0px 1px 4px 0px hsl(0 0 0 / 0.03);
+    --shadow-xs: 0px 1px 4px 0px hsl(0 0 0 / 0.03);
+    --shadow-sm: 0px 1px 4px 0px hsl(0 0 0 / 0.05), 0px 1px 2px -1px hsl(0 0 0 / 0.05);
+    --shadow: 0px 1px 4px 0px hsl(0 0 0 / 0.05), 0px 1px 2px -1px hsl(0 0 0 / 0.05);
+    --shadow-md: 0px 1px 4px 0px hsl(0 0 0 / 0.05), 0px 2px 4px -1px hsl(0 0 0 / 0.05);
+    --shadow-lg: 0px 1px 4px 0px hsl(0 0 0 / 0.05), 0px 4px 6px -1px hsl(0 0 0 / 0.05);
+    --shadow-xl: 0px 1px 4px 0px hsl(0 0 0 / 0.05), 0px 8px 10px -1px hsl(0 0 0 / 0.05);
+    --shadow-2xl: 0px 1px 4px 0px hsl(0 0 0 / 0.13);
+    --tracking-normal: -0.01em;
+    --spacing: 0.30rem;
+    --success: #16a34a;
 }
 
 /*
@@ -207,127 +207,128 @@
 */
 .dark,
 [data-theme="dark"] {
-  color-scheme: dark;
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.444 0.177 26.899);
-  --primary-foreground: oklch(0.971 0.013 17.38);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.808 0.114 19.571);
-  --chart-2: oklch(0.637 0.237 25.331);
-  --chart-3: oklch(0.577 0.245 27.325);
-  --chart-4: oklch(0.505 0.213 27.518);
-  --chart-5: oklch(0.444 0.177 26.899);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.637 0.237 25.331);
-  --sidebar-primary-foreground: oklch(0.971 0.013 17.38);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-  --font-sans: 'Outfit Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-serif: Georgia, serif;
-  --font-mono: 'JetBrains Mono Variable', ui-monospace, Menlo, monospace;
-  --radius: 0.625rem;
-  --shadow-x: 0px;
-  --shadow-y: 2px;
-  --shadow-blur: 8px;
-  --shadow-spread: 0px;
-  --shadow-opacity: 0.4;
-  --shadow-color: 0 0 0;
-  --shadow-2xs: 0px 2px 8px 0px hsl(0 0 0 / 0.20);
-  --shadow-xs: 0px 2px 8px 0px hsl(0 0 0 / 0.20);
-  --shadow-sm: 0px 2px 8px 0px hsl(0 0 0 / 0.40), 0px 1px 2px -1px hsl(0 0 0 / 0.40);
-  --shadow: 0px 2px 8px 0px hsl(0 0 0 / 0.40), 0px 1px 2px -1px hsl(0 0 0 / 0.40);
-  --shadow-md: 0px 2px 8px 0px hsl(0 0 0 / 0.40), 0px 2px 4px -1px hsl(0 0 0 / 0.40);
-  --shadow-lg: 0px 2px 8px 0px hsl(0 0 0 / 0.40), 0px 4px 6px -1px hsl(0 0 0 / 0.40);
-  --shadow-xl: 0px 2px 8px 0px hsl(0 0 0 / 0.40), 0px 8px 10px -1px hsl(0 0 0 / 0.40);
-  --shadow-2xl: 0px 2px 8px 0px hsl(0 0 0 / 1.00);
-  --tracking-normal: -0.01em;
-  --spacing: 0.26rem;
-  --success: #4ade80;
+    color-scheme: dark;
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.444 0.177 26.899);
+    --primary-foreground: oklch(0.971 0.013 17.38);
+    --secondary: oklch(0.274 0.006 286.033);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --destructive-foreground: oklch(1 0 0);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.556 0 0);
+    --chart-1: oklch(0.808 0.114 19.571);
+    --chart-2: oklch(0.637 0.237 25.331);
+    --chart-3: oklch(0.577 0.245 27.325);
+    --chart-4: oklch(0.505 0.213 27.518);
+    --chart-5: oklch(0.444 0.177 26.899);
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.637 0.237 25.331);
+    --sidebar-primary-foreground: oklch(0.971 0.013 17.38);
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(1 0 0 / 10%);
+    --sidebar-ring: oklch(0.556 0 0);
+    --font-sans: 'Outfit Variable', ui-sans-serif, system-ui, sans-serif;
+    --font-serif: Georgia, serif;
+    --font-mono: 'JetBrains Mono Variable', ui-monospace, Menlo, monospace;
+    --radius: 0.625rem;
+    --shadow-x: 0px;
+    --shadow-y: 2px;
+    --shadow-blur: 8px;
+    --shadow-spread: 0px;
+    --shadow-opacity: 0.4;
+    --shadow-color: 0 0 0;
+    --shadow-2xs: 0px 2px 8px 0px hsl(0 0 0 / 0.20);
+    --shadow-xs: 0px 2px 8px 0px hsl(0 0 0 / 0.20);
+    --shadow-sm: 0px 2px 8px 0px hsl(0 0 0 / 0.40), 0px 1px 2px -1px hsl(0 0 0 / 0.40);
+    --shadow: 0px 2px 8px 0px hsl(0 0 0 / 0.40), 0px 1px 2px -1px hsl(0 0 0 / 0.40);
+    --shadow-md: 0px 2px 8px 0px hsl(0 0 0 / 0.40), 0px 2px 4px -1px hsl(0 0 0 / 0.40);
+    --shadow-lg: 0px 2px 8px 0px hsl(0 0 0 / 0.40), 0px 4px 6px -1px hsl(0 0 0 / 0.40);
+    --shadow-xl: 0px 2px 8px 0px hsl(0 0 0 / 0.40), 0px 8px 10px -1px hsl(0 0 0 / 0.40);
+    --shadow-2xl: 0px 2px 8px 0px hsl(0 0 0 / 1.00);
+    --tracking-normal: -0.01em;
+    --spacing: 0.30rem;
+    --success: #4ade80;
 }
 
 @layer base {
-  /*
+
+    /*
     v4 changed the default border colour to `currentcolor`. Restoring the
     themed default means a bare `border` picks up --border again, as it did
     under the v3 palette.
   */
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    @apply border-border outline-ring/50;
-  }
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        @apply border-border outline-ring/50;
+    }
 
-  html {
-    @apply font-sans;
-    min-height: 100%;
-    background: var(--background);
-    /* High-quality text rendering for all screens. */
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
-    font-feature-settings: "kern" 1, "liga" 1;
-  }
+    html {
+        @apply font-sans;
+        min-height: 100%;
+        background: var(--background);
+        /* High-quality text rendering for all screens. */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+        font-feature-settings: "kern" 1, "liga" 1;
+    }
 
-  body {
-    @apply bg-background text-foreground;
-    letter-spacing: var(--tracking-normal);
-    margin: 0;
-    min-height: 100%;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
+    body {
+        @apply bg-background text-foreground;
+        letter-spacing: var(--tracking-normal);
+        margin: 0;
+        min-height: 100%;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
 
-  #root {
-    min-height: 100vh;
-    background: var(--background);
-    position: relative;
-  }
+    #root {
+        min-height: 100vh;
+        background: var(--background);
+        position: relative;
+    }
 
-  *,
-  ::after,
-  ::before {
-    -webkit-tap-highlight-color: transparent;
-  }
+    *,
+    ::after,
+    ::before {
+        -webkit-tap-highlight-color: transparent;
+    }
 
-  /*
+    /*
     Scrollbars are hidden by default but scrolling still works, so panels do
     not sprout a permanent gutter they were not designed around. Anything that
     genuinely needs a visible scrollbar opts back in with `bucket-scrollable`.
   */
-  * {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
+    * {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
 
-  *::-webkit-scrollbar {
-    display: none;
-  }
+    *::-webkit-scrollbar {
+        display: none;
+    }
 
-  kbd {
-    font-family: inherit;
-  }
+    kbd {
+        font-family: inherit;
+    }
 
-  /*
+    /*
     Focus indicators. This lives in the base layer, which is deliberate: the
     shadcn primitives carry their own focus-visible:ring *and* outline-none,
     and because a utility outranks the base layer that outline-none wins. So
@@ -335,47 +336,49 @@
     -- the raw buttons in BatchActionsBar, the breadcrumb triggers, the
     connection rows -- and never doubles up on a primitive that already has one.
   */
-  button:focus-visible,
-  a:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
-  }
+    button:focus-visible,
+    a:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
+    }
 
-  input:focus-visible,
-  textarea:focus-visible {
-    outline: none;
-  }
+    input:focus-visible,
+    textarea:focus-visible {
+        outline: none;
+    }
 
-  /*
+    /*
     Layout containment on the two chrome regions. Isolates their internal
     layout so scrolling a long file list does not recalculate the sidebar or
     header, and keeps a reflow in one from forcing a paint in the other.
   */
-  aside {
-    contain: style;
-  }
+    aside {
+        contain: style;
+    }
 
-  header {
-    contain: layout;
-  }
+    header {
+        contain: layout;
+    }
 }
 
 /* Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }
 
 /* Crisp rendering on high-DPI displays */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  html {
-    text-rendering: geometricPrecision;
-  }
+@media (-webkit-min-device-pixel-ratio: 2),
+(min-resolution: 192dpi) {
+    html {
+        text-rendering: geometricPrecision;
+    }
 }
 
 /*
@@ -388,26 +391,26 @@
   the list look truncated with no affordance for the rows below the fold.
 */
 @utility bucket-scrollable {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
 
-  &::-webkit-scrollbar {
-    display: block;
-    width: 4px;
-  }
+    &::-webkit-scrollbar {
+        display: block;
+        width: 4px;
+    }
 
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
 
-  &::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 4px;
-  }
+    &::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 4px;
+    }
 
-  &::-webkit-scrollbar-thumb:hover {
-    background: var(--muted-foreground);
-  }
+    &::-webkit-scrollbar-thumb:hover {
+        background: var(--muted-foreground);
+    }
 }
 
 /*
@@ -417,8 +420,8 @@
   and dropping either is a silent bug that renders the row invisible forever.
 */
 @utility stagger-item {
-  opacity: 0;
-  animation: fadeInUp 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+    animation: fadeInUp 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /*
@@ -428,32 +431,32 @@
   keep the mark from disappearing into the surface it sits on.
 */
 @utility logo-themed {
-  filter: invert(1) !important;
-  image-rendering: -webkit-optimize-contrast;
-  transform: translateZ(0);
-  backface-visibility: hidden;
+    filter: invert(1) !important;
+    image-rendering: -webkit-optimize-contrast;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 
-  &:hover {
-    filter: invert(1) drop-shadow(0 0 4px rgb(255 255 255 / 0.25)) !important;
-  }
+    &:hover {
+        filter: invert(1) drop-shadow(0 0 4px rgb(255 255 255 / 0.25)) !important;
+    }
 
-  [data-theme="light"] & {
-    filter: invert(0) !important;
-  }
+    [data-theme="light"] & {
+        filter: invert(0) !important;
+    }
 
-  [data-theme="light"] &:hover {
-    filter: invert(0) drop-shadow(0 0 4px rgb(0 0 0 / 0.15)) !important;
-  }
+    [data-theme="light"] &:hover {
+        filter: invert(0) drop-shadow(0 0 4px rgb(0 0 0 / 0.15)) !important;
+    }
 }
 
 @utility logo-spin {
-  transition: transform 0.4s ease;
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
+    transition: transform 0.4s ease;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
 
-  &:hover {
-    animation: logoSpin 2.5s linear infinite;
-  }
+    &:hover {
+        animation: logoSpin 2.5s linear infinite;
+    }
 }
 
 /*
@@ -461,15 +464,15 @@
   sidebar header. Only the glow lives here; the box comes from Button.
 */
 @utility create-bucket-btn {
-  &:hover {
-    text-shadow: 0 0 8px var(--primary);
-    filter: drop-shadow(0 0 3px var(--primary));
-  }
+    &:hover {
+        text-shadow: 0 0 8px var(--primary);
+        filter: drop-shadow(0 0 3px var(--primary));
+    }
 
-  &:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-  }
+    &:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+    }
 }
 
 /*
@@ -478,11 +481,11 @@
   offset alone would leave them partly covered on notched phones.
 */
 @utility mb-safe {
-  margin-bottom: env(safe-area-inset-bottom);
+    margin-bottom: env(safe-area-inset-bottom);
 }
 
 @utility pb-safe {
-  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
 }
 
 /*
@@ -496,36 +499,81 @@
   independent property and composes with `transform` instead.
 */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes slideIn {
-  from { opacity: 0; translate: -10px 0; }
-  to { opacity: 1; translate: 0 0; }
+    from {
+        opacity: 0;
+        translate: -10px 0;
+    }
+
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; translate: 0 8px; }
-  to { opacity: 1; translate: 0 0; }
+    from {
+        opacity: 0;
+        translate: 0 8px;
+    }
+
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
 }
 
 @keyframes fadeInDown {
-  from { opacity: 0; translate: 0 -8px; }
-  to { opacity: 1; translate: 0 0; }
+    from {
+        opacity: 0;
+        translate: 0 -8px;
+    }
+
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
 }
 
 @keyframes slideInRight {
-  from { opacity: 0; translate: 8px 0; }
-  to { opacity: 1; translate: 0 0; }
+    from {
+        opacity: 0;
+        translate: 8px 0;
+    }
+
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
 }
 
 @keyframes slideUpFade {
-  from { opacity: 0; translate: 0 16px; }
-  to { opacity: 1; translate: 0 0; }
+    from {
+        opacity: 0;
+        translate: 0 16px;
+    }
+
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
 }
 
 @keyframes logoSpin {
-  from { rotate: 0deg; }
-  to { rotate: 360deg; }
+    from {
+        rotate: 0deg;
+    }
+
+    to {
+        rotate: 360deg;
+    }
 }
