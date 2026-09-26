@@ -137,7 +137,12 @@ export function AuthenticatedFilesShell({
 }: AuthenticatedFilesShellProps) {
   const inputRef = fileInputRef as { current: HTMLInputElement | null };
   return (
-    <div className="h-screen flex bg-background overflow-hidden">
+    // pt-[env(safe-area-inset-top)]: viewport-fit=cover is set, so in installed
+    // standalone mode the notch and status bar overlay the app and the header's
+    // controls land underneath them. Zero everywhere else, including Safari's
+    // own browser chrome. An arbitrary value rather than a @utility, because
+    // biome cannot parse Tailwind v4 @utility and each one costs a finding.
+    <div className="h-screen flex bg-background overflow-hidden pt-[env(safe-area-inset-top)]">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-100 focus:bg-background focus:px-4 focus:py-2 focus:rounded-md focus:ring-2 focus:ring-ring focus:text-foreground">Skip to main content</a>
       <DashboardSidebar buckets={buckets} selectedBucket={selectedBucket} searchQuery={searchQuery} loading={loading}
         sidebarOpen={sidebarOpen} collapsed={sidebarCollapsed} onToggleCollapse={() => onSetSidebarCollapsed(!sidebarCollapsed)}

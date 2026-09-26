@@ -164,12 +164,12 @@ export function DashboardHeader({
 
             {/* Center Section - Search (Absolutely positioned for true center) */}
             {onOpenCommandPalette && (
-                <div className="absolute left-1/2 -translate-x-1/2 hidden md:block">
+                <div className="absolute left-1/2 -translate-x-1/2 hidden md:block max-w-sm w-full">
                     <Button
                         onClick={onOpenCommandPalette}
                         variant="outline"
                         size="sm"
-                        className="w-[170px] justify-start gap-1.5 text-muted-foreground font-normal"
+                        className="flex-1 w-full justify-start gap-1.5 text-muted-foreground font-normal"
                         aria-label={`Open command palette (${isMac ? 'Cmd' : 'Ctrl'}+K)`}
                     >
                         <Search className="size-3.5 shrink-0" aria-hidden="true" />
@@ -187,7 +187,6 @@ export function DashboardHeader({
                             onClick={onNewFolder}
                             variant="secondary"
                             size="sm"
-                            className="rounded-full"
                             aria-label="Create new folder"
                         >
                             <FolderPlus className="size-5 sm:size-4" aria-hidden="true" />
@@ -202,7 +201,7 @@ export function DashboardHeader({
                             render={<label htmlFor="header-upload" />}
                             nativeButton={false}
                             size="sm"
-                            className="cursor-pointer rounded-full"
+                            className="cursor-pointer"
                             aria-label="Upload files"
                         >
                             <img src="/icons/upload.png" alt="" className="size-5 sm:size-4 brightness-0 invert" aria-hidden="true" />
@@ -224,11 +223,11 @@ export function DashboardHeader({
                 <Button
                     onClick={handleRefresh}
                     disabled={!selectedBucket || loading}
-                    variant="ghost"
-                    size="icon-lg"
+                    variant="outline"
+                    size="icon-sm"
                     aria-label={loading ? 'Refreshing...' : 'Refresh file list'}
                 >
-                    <RefreshCw className={cn('size-5', isSpinning && 'animate-spin')} aria-hidden="true" />
+                    <RefreshCw className={cn('size-3', isSpinning && 'animate-spin')} aria-hidden="true" />
                 </Button>
             </div>
         </header>

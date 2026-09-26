@@ -45,6 +45,11 @@ export const PAGINATION = {
 // Drive sits on a desktop: square crop, name plus one metadata line, kebab menu
 // overlaid in the corner. Six columns on a 1512px laptop with the sidebar
 // collapsed is the ceiling before thumbnails stop being legible.
+//
+// Widths are matched against the pane's content box, so they are already net of
+// FileGrid's p-2: a 390px phone reports ~371, which is why the two-column entry
+// needs minWidth 0 and not 380. At 380 it needed 396px of pane, so every phone
+// fell through to the old one-column fallback.
 export const GRID = {
   // Container width (px) -> column count, highest match wins. Evaluated
   // top-down, so keep these sorted descending.
@@ -54,16 +59,16 @@ export const GRID = {
     { minWidth: 1024, columns: 5 },  // normal desktop scale
     { minWidth: 768, columns: 4 },
     { minWidth: 560, columns: 3 },
-    { minWidth: 380, columns: 2 },
+    { minWidth: 0, columns: 2 },     // phones: two tiles per row
   ] as const,
-  FALLBACK_COLUMNS: 1,
+  // Only reachable for a non-finite width; NaN would blank the grid.
+  FALLBACK_COLUMNS: 2,
 
   // Height of the text block under each thumbnail (name + metadata line).
   CAPTION_HEIGHT: 56,
   // Spacing between tiles. Applied as GAP/2 padding on each cell, so it also
   // produces a GAP/2 gutter at the pane edges.
   GAP: 12,
-  TILE_MIN_WIDTH: 170,    // below this the grid stops being legible
   OVERSCAN_COLUMNS: 2,    // extra columns rendered left/right of the viewport
 
   // Thumbnails. There is no server-side resizing yet, so an <img> pulls the
@@ -87,6 +92,17 @@ export function gridColumnsFor(width: number): number {
     if (width >= bp.minWidth) return bp.columns;
   }
   return GRID.FALLBACK_COLUMNS;
+}
+
+/**
+ * Column *pitch* for a pane of `width` split into `columns`.
+ *
+ * No minimum, unlike the TILE_MIN_WIDTH floor this replaces. FixedSizeGrid
+ * scrolls horizontally instead of shrinking, so a floor past `width / columns`
+ * pushes the right-hand column off the edge rather than making tiles narrower.
+ */
+export function gridColumnWidthFor(width: number, columns: number): number {
+  return Math.floor(width / Math.max(1, Math.floor(columns)));
 }
 
 // Storage Keys

@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { FixedSizeGrid as Grid } from 'react-window';
-import { GRID, gridColumnsFor, PAGINATION } from '@/constants';
+import { GRID, gridColumnsFor, gridColumnWidthFor, PAGINATION } from '@/constants';
 import { useElementSize } from '@/hooks/useElementSize';
 import type { S3Object } from '@/types';
 import { GridCell, cellId, type CellData } from './GridCell';
@@ -33,6 +33,15 @@ export interface FileGridProps {
  * unreachable by Tab. aria-activedescendant keeps focus on the scroll container
  * and points it at whichever cell is active, which survives virtualisation.
  */
+
+/**
+ * Seed width for the first render, before useElementSize reports anything.
+ * A seed, not a measurement: the observer replaces it a frame later. The flat
+ * 800 this replaces laid a 375px phone out at six columns, then visibly
+ * reflowed to two.
+ */
+const SEED_WIDTH = typeof window === 'undefined' ? 800 : window.innerWidth;
+
 export function FileGrid({
     bucket,
     objects,
@@ -48,8 +57,9 @@ export function FileGrid({
 }: FileGridProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const gridRef = useRef<Grid>(null);
-    const { width, height } = useElementSize(containerRef);
+    const { width: measuredWidth, height } = useElementSize(containerRef);
 
+    const width = measuredWidth || SEED_WIDTH;
     const columns = gridColumnsFor(width);
     const rowCount = Math.ceil(objects.length / columns);
 
@@ -61,7 +71,7 @@ export function FileGrid({
     // from the same pitch is what keeps the tiles square and the rows from
     // drifting out of alignment.
     const geometry = useMemo(() => {
-        const columnWidth = Math.max(Math.floor(width / columns), GRID.TILE_MIN_WIDTH);
+        const columnWidth = gridColumnWidthFor(width, columns);
         return {
             columnWidth,
             // Square image (pitch - GAP) plus a fixed caption block.
@@ -238,7 +248,7 @@ export function FileGrid({
                 columnWidth={geometry.columnWidth}
                 rowCount={rowCount}
                 rowHeight={geometry.rowHeight}
-                width={width || 800}
+                width={width}
                 height={height || 400}
                 overscanColumnCount={GRID.OVERSCAN_COLUMNS}
                 overscanRowCount={1}

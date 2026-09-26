@@ -111,6 +111,28 @@ flowchart TB
 
 ### Deployment
 
+#### Installing on a phone (PWA)
+
+The app is installable: it ships a `manifest.webmanifest` and an app-shell
+service worker, so it launches from the home screen with no browser chrome and
+opens offline.
+
+Browsers only offer installation over HTTPS. `http://localhost` is exempt, so
+this works while developing, but a phone reaching the app over a LAN IP or a
+plain-HTTP host will show "Add to Home Screen" with no install prompt. Put it
+behind a TLS-terminating reverse proxy first.
+
+Once installed:
+
+- Android/Chrome: menu → *Install app*, or the install prompt on first visit.
+- iOS/Safari: Share → *Add to Home Screen*. iOS needs the `apple-touch-icon`
+  and `apple-mobile-web-app-*` tags rather than the manifest, which is why
+  `index.html` carries both.
+
+The service worker caches only same-origin static output. `/api` is never
+intercepted — object data is per-session, so a cached listing would show one
+user's buckets to the next, and would make a delete appear to undo itself.
+
 #### Railway (Recommended)
 
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/s3-explorer)

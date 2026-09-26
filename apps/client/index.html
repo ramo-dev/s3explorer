@@ -8,6 +8,19 @@
   <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
   <meta name="description" content="Secure, self-hosted S3 file explorer for managing buckets and objects" />
+
+  <!-- PWA. The manifest is what makes the app installable; the two
+       mobile-web-app tags are what make iOS open it without browser chrome.
+       iOS still ignores manifest `display` for older versions and reads these
+       instead, so both are needed rather than either. -->
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="S3 Explorer" />
+  <!-- Standalone launches already sit on the theme background, so this only
+       affects the browser tab, where the light/dark pair above is correct. -->
+  <meta name="mobile-web-app-capable" content="yes" />
+
   <title>S3 Explorer</title>
   <style>
     /* Critical CSS - prevents flash of wrong color.
