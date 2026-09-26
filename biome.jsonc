@@ -1,0 +1,129 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true,
+    "root": "."
+  },
+
+  "files": {
+    "ignoreUnknown": true,
+    // The trailing /** matters. "!!**/dist" alone does not stop the folder
+    // being walked, and dist/ holds ~20 minified bundles that bury every real
+    // finding in noise.
+    "includes": [
+      "**",
+      "!!**/dist",
+      "!!**/build",
+      "!!**/node_modules",
+      "!!**/coverage",
+      "!!**/pnpm-lock.yaml"
+    ]
+  },
+
+  // Formatting is off on purpose, and "formatter.enabled": false is NOT enough
+  // to achieve that -- biome check still formats. formatter.includes is the
+  // only setting that reliably disables it.
+  //
+  // The linter is what catches real defects. A whole-repo reflow would bury the
+  // router refactor's diff under whitespace, and the house style is already
+  // applied below, so switching this on later is a one-line change plus a
+  // single mechanical `biome check --write`.
+  "formatter": {
+    "enabled": false,
+    "includes": [],
+    "indentStyle": "space",
+    "indentWidth": 4,
+    "lineWidth": 100
+  },
+
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "always",
+      "trailingCommas": "all",
+      "arrowParentheses": "asNeeded"
+    }
+  },
+
+  "linter": {
+    "enabled": true,
+    "rules": {
+      // "preset" is the v2 name. linter.rules.recommended is deprecated.
+      "preset": "recommended"
+    }
+  },
+
+  // organizeImports moved to assist in v2; it is no longer a linter rule.
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "recommended": true
+      }
+    }
+  },
+
+  "overrides": [
+    {
+      // The reduced-motion block needs !important to outrank the transitions
+      // it is cancelling. That is the one legitimate use in the repo, so the
+      // rule is off for this file rather than suppressed line by line.
+      "includes": ["**/index.css"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noImportantStyles": "off"
+          }
+        }
+      }
+    },
+    {
+      // Decorative brand assets. A <title> on the logo would be read out as
+      // "S3 Explorer, logo, image" on a page that already announces its name.
+      "includes": ["**/public/**/*.svg"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noSvgWithoutTitle": "off"
+          }
+        }
+      }
+    },
+    {
+      // Vendored shadcn/recharts sources under src/components/ui. They are
+      // kept byte-identical to upstream so they can be re-synced, so fixing
+      // findings inside them would create a permanent merge conflict.
+      "includes": ["**/src/components/ui/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noNonNullAssertion": "off"
+          },
+          "suspicious": {
+            "noArrayIndexKey": "off",
+            "noDoubleEquals": "off"
+          },
+          "security": {
+            "noDangerouslySetInnerHtml": "off"
+          }
+        }
+      }
+    },
+    {
+      // A file previewer streams arbitrary objects the app has never seen, so
+      // there is no caption track to attach. Requiring one would mean shipping
+      // a fake <track> that browsers report as an error.
+      "includes": ["**/FilePreviewModal.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useMediaCaption": "off"
+          }
+        }
+      }
+    }
+  ]
+}
