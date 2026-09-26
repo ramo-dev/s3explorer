@@ -156,20 +156,21 @@ volumes:
 #### Local Development
 
 ```bash
-npm run install:all
+npm install
 
 export APP_PASSWORD='DevPassword123!'
 export SESSION_SECRET='dev-secret-not-for-production-use!!'
-export DATA_DIR='./data'
 
 npm run dev
 ```
+
+`DATA_DIR` does not need setting locally. With it unset the server stores its data in `apps/server/data`; containers set `DATA_DIR=/data` themselves. See [Environment Variables](#environment-variables).
 
 Backend runs on :3000, frontend on :5173.
 
 ### Database Maintenance
 
-The server stores its SQLite database and AES-256-GCM encryption key in `DATA_DIR`. Both are reachable from a CLI that reads the same `DATA_DIR` the server does:
+The server stores its SQLite database and AES-256-GCM encryption key in `DATA_DIR`. Both are reachable from a CLI that reads the same `DATA_DIR` the server does, so no prefix is needed locally:
 
 ```bash
 npm run db:info                  # paths, sizes, row counts, integrity check
@@ -180,7 +181,7 @@ npm run db:reset                 # delete all rows; keeps schema + encryption ke
 npm run db -- help
 ```
 
-`db:info` is the one to reach for first. It resolves and prints every path, runs `PRAGMA integrity_check`, and shows per-table row counts.
+`db:info` is the one to reach for first. It resolves and prints every path, runs `PRAGMA integrity_check`, and shows per-table row counts. It also says which `DATA_DIR` was used and whether that was a default, which is the first thing to check when a command reports an empty database.
 
 Two notes on `db:backup`:
 
@@ -193,7 +194,7 @@ Two notes on `db:backup`:
 
 1. `APP_PASSWORD` (optional): Login password. Must be 12+ chars with upper, lower, number, special char. If not set, a setup wizard will appear on first launch to configure it.
 2. `SESSION_SECRET` (optional): Session signing key. Use `openssl rand -hex 32`. If not set, a random secret is generated (sessions will be lost on server restart). Can also be configured through the setup wizard.
-3. `DATA_DIR` (optional): SQLite/key storage path. Default: `/data`
+3. `DATA_DIR` (optional): Where the SQLite database and encryption key live. Defaults to `/data` when `NODE_ENV=production` and to `apps/server/data` otherwise. The development default is resolved from the package location rather than the working directory, so it does not change with where you run the command from. Container images set it explicitly, so the production default only applies if you run the server outside a container without setting it.
 4. `PORT` (optional): Server port. Default: `3000`
 5. `NODE_ENV` (optional): Environment (`production` / `development`)
 

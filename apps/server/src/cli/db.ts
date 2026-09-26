@@ -16,13 +16,14 @@
 
 import 'dotenv/config';
 import fs from 'node:fs';
+import net from 'node:net';
 import path from 'node:path';
 // node:readline/promises, not node:readline: question() is callback-only in the
 // callback module's types (@types/node 20), and awaiting the callback form means
 // wrapping it in a constructor-shaped promise for no gain.
 import readline from 'node:readline/promises';
 import Database from 'better-sqlite3';
-import { DATA_DIR, DB_PATH, KEY_PATH, UPLOAD_TEMP_DIR, DB_SIDECAR_PATHS } from '../services/data-dir.js';
+import { DATA_DIR, DATA_DIR_IS_DEFAULT, DB_PATH, KEY_PATH, UPLOAD_TEMP_DIR, DB_SIDECAR_PATHS } from '../services/data-dir.js';
 
 // `db info | head` and `db sql "..." | grep` close the pipe while output is
 // still buffered. Node turns that into an unhandled 'error' on stdout and
@@ -112,6 +113,48 @@ const appTables = (db: Database.Database): string[] =>
     (r) => r.name,
   );
 
+/**
+ * Is something already serving on the app's port?
+ *
+ * Wiping the database out from under a running server is the failure this check
+ * exists for, and SQLite will not stop it: the server holds an open handle, its
+ * hourly cleanup timer can write a session row moments after the wipe, and
+ * index.ts caches session_secret in memory at boot, so a reset leaves it signing
+ * cookies with a secret that no longer exists in the database. The result is a
+ * server that appears healthy and rejects every login.
+ *
+ * A connection attempt cannot prove *which* process answered, so this is a
+ * warning rather than a refusal -- a false positive costs one line of output,
+ * whereas refusing outright would break resetting a box where the port is held
+ * by something unrelated.
+ */
+const serverLooksRunning = async (): Promise<boolean> => {
+  const port = Number(process.env.PORT) || 3000;
+  return new Promise<boolean>((resolve) => {
+    // Not connecting to 0.0.0.0/:: -- bind the loopback interface instead.
+    const socket = new net.Socket();
+    const settle = (result: boolean): void => {
+      socket.removeAllListeners();
+      socket.destroy();
+      resolve(result);
+    };
+    socket.setTimeout(400);
+    socket.once('connect', () => settle(true));
+    socket.once('timeout', () => settle(false));
+    socket.once('error', () => settle(false));
+    socket.connect(port, '127.0.0.1');
+  });
+};
+
+const warnIfServerRunning = async (): Promise<void> => {
+  if (!(await serverLooksRunning())) return;
+  const port = Number(process.env.PORT) || 3000;
+  warn(`\n  ${c(YELLOW, 'warning')}  something is already listening on port ${port}.`);
+  warn(`  ${c(DIM, 'If that is the S3 Explorer server, stop it first. It caches')}`);
+  warn(`  ${c(DIM, 'session_secret in memory and will keep writing rows after a wipe,')}`);
+  warn(`  ${c(DIM, 'leaving a server that looks healthy but rejects every login.')}`);
+};
+
 const printTable = (name: string, rows: unknown[]): void => {
   if (rows.length === 0) {
     console.log(`  ${c(name, name)}\n    ${c(DIM, '(no rows)')}`);
@@ -140,6 +183,25 @@ const printTable = (name: string, rows: unknown[]): void => {
 // Path on its own line, size right-aligned against the label column. Absolute
 // paths in a mounted volume get long, and putting them on the same line as the
 // size pushes the sizes into a ragged column.
+/**
+ * "There is nothing here" is the message that most needed to be actionable and
+ * was least actionable: the path is a derived default, so `no database at
+ * /data/s3explorer.db` tells the reader nothing about why they are looking in
+ * the wrong place or what to do instead.
+ */
+const noDatabase = (): void => {
+  warn(`  ${c(YELLOW, 'no database')} at ${DB_PATH}`);
+  if (DATA_DIR_IS_DEFAULT) {
+    warn(`\n  ${c(DIM, 'DATA_DIR is not set, so the development default was used:')}`);
+    warn(`    ${c(BOLD, DATA_DIR)}`);
+    warn(`\n  If your database is elsewhere, point at it:`);
+    warn(`    ${c(BOLD, 'DATA_DIR=/path/to/dir')} pnpm db:info`);
+    warn(`\n  ${c(DIM, 'A container deployment sets DATA_DIR=/data; a local one normally wants')}`);
+    warn(`  ${c(DIM, 'apps/server/data. Both the server and this CLI read the same variable.')}`);
+  }
+  warn(`\n  ${c(DIM, 'If this is a fresh install, start the server once and it will create the database.')}`);
+};
+
 const describe = (p: string, label: string): string =>
   `  ${c(BOLD, label)}\n    ${p}  ${c(DIM, sizeOf(p))}`;
 
@@ -147,7 +209,11 @@ const describe = (p: string, label: string): string =>
 
 const cmdInfo = (): void => {
   console.log(`\n${c(BOLD, 'Storage')}`);
-  console.log(`  ${c(DIM, `DATA_DIR=${process.env.DATA_DIR ?? '(unset)'}${process.env.DATA_DIR ? '' : '  -> defaulted to /data'}`)}`);
+  console.log(
+    DATA_DIR_IS_DEFAULT
+      ? `  ${c(DIM, 'DATA_DIR is unset')} ${c(YELLOW, '->')} ${c(DIM, 'default for')} NODE_ENV=${process.env.NODE_ENV ?? '(unset)'}`
+      : `  ${c(DIM, `DATA_DIR=${process.env.DATA_DIR}`)}`,
+  );
   console.log(describe(DB_PATH, 'database'));
   console.log(describe(KEY_PATH, 'encryption key'));
   for (const sidecar of DB_SIDECAR_PATHS) {
@@ -156,7 +222,7 @@ const cmdInfo = (): void => {
   console.log(describe(UPLOAD_TEMP_DIR, 'tmp-uploads'));
 
   if (!fs.existsSync(DB_PATH)) {
-    console.log(`\n${c(YELLOW, 'no database yet')} -- start the server once to create it.`);
+    noDatabase();
     return;
   }
 
@@ -217,7 +283,8 @@ const cmdSql = (args: string[]): void => {
 
 const cmdBackup = async (args: string[]): Promise<void> => {
   if (!fs.existsSync(DB_PATH)) {
-    console.error(`${c(RED, "error")} no database at ${DB_PATH}`);
+    noDatabase();
+    process.exit(1);
     process.exit(1);
   }
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
@@ -254,7 +321,7 @@ const cmdBackup = async (args: string[]): Promise<void> => {
 const cmdReset = async (args: string[]): Promise<void> => {
   const yes = args.includes('--yes');
   if (!fs.existsSync(DB_PATH)) {
-    warn(`  ${c(YELLOW, 'nothing to do')} -- no database at ${DB_PATH}`);
+    noDatabase();
     return;
   }
 
@@ -272,6 +339,8 @@ const cmdReset = async (args: string[]): Promise<void> => {
   warn(`\n${c(BOLD, 'Will delete')}  ${c(DIM, `${total} rows across ${tables.length} tables`)}`);
   for (const [t, n] of counts.filter(([, n]) => n > 0)) warn(`  ${t.padEnd(20)} ${String(n).padStart(8)}`);
   warn(`\n  ${c(DIM, `keeps ${path.basename(KEY_PATH)}, so credentials re-added later use the same key`)}`);
+
+  await warnIfServerRunning();
 
   if (!yes && !(await confirm(`\nDelete all ${total} rows?`))) {
     warn('  cancelled');
@@ -342,6 +411,8 @@ const cmdNuke = async (args: string[]): Promise<void> => {
         `  of this data dir will never be decryptable again.`,
     );
   }
+
+  await warnIfServerRunning();
 
   if (!yes && !(await confirm(`\nPermanently delete ${targets.length} file(s)?`))) {
     warn('  cancelled');

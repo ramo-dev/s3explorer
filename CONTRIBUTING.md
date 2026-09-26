@@ -33,11 +33,10 @@ s3explorer/
 ```bash
 git clone https://github.com/ramo-dev/s3explorer.git
 cd s3explorer
-npm run install:all
+npm install
 
 export APP_PASSWORD='DevPassword123!'
 export SESSION_SECRET='dev-secret-not-for-production-use!!'
-export DATA_DIR='./data'
 
 npm run dev
 ```
@@ -53,7 +52,7 @@ npm run db:info     # where the files are, row counts, integrity check
 npm run db:reset    # start over: empty tables, schema and key retained
 ```
 
-It reads the same `DATA_DIR` as the server, so export it the same way.
+It reads the same `DATA_DIR` as the server, so both commands always agree on which database they mean. Locally you do not need to set `DATA_DIR` at all — it defaults to `apps/server/data`, resolved from the package location so it does not shift with the working directory.
 
 ### Before You Start
 
