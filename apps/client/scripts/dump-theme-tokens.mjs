@@ -1,20 +1,27 @@
 // Dumps the resolved light/dark token values from the built stylesheet, so a
 // bad rename or a lost theme block shows up as a wrong value rather than as a
 // silently unstyled element.
+//
+//   node scripts/dump-theme-tokens.mjs [path/to.css]
+//
+// With no argument it picks the newest dist/assets/index-*.css.
 import fs from "node:fs";
+import { resolveBuiltCss } from "./lib/built-css.mjs";
 
-const css = fs.readFileSync(process.argv[2], "utf8");
+const file = resolveBuiltCss(process.argv[2]);
+const css = fs.readFileSync(file, "utf8");
+console.log(`reading ${file}\n`);
 
-// A theme block is a rule whose selector is exactly `:root` or
-// `[data-theme="dark"]` and whose body declares --background. Matching the
-// exact selector avoids picking up `dark:...:is([data-theme=dark] *)` rules.
+// A theme block is a rule whose body declares --background. Matching on the body
+// rather than the full selector is deliberate: the dark selector is now
+// `.dark, [data-theme="dark"]`, and the minifier rewrites `[data-theme="dark"]`
+// to `[data-theme=dark]`, so pinning the exact selector text would be brittle.
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-function findBlock(selector) {
-  const re = new RegExp(escapeRe(selector) + "\\{([^{}]*)\\}", "g");
-  return [...css.matchAll(re)]
-    .map((m) => m[1])
-    .filter((body) => /(^|;)\s*--background\s*:/.test(body));
+function findBlocks() {
+  return [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter(([, sel, body]) => /(^|;)\s*--background\s*:/.test(body))
+    .map(([, sel, body]) => ({ sel: sel.trim(), body }));
 }
 
 function read(body, key) {
@@ -22,40 +29,79 @@ function read(body, key) {
   return m ? m[1].trim() : "(absent)";
 }
 
-const light = findBlock(":root");
-// minifiers drop the quotes around the attribute value, so accept both forms
-const dark = [...findBlock('[data-theme="dark"]'), ...findBlock("[data-theme=dark]")];
+const declared = (body) =>
+  new Set([...body.matchAll(/(--[a-z0-9-]+)\s*:/g)].map((m) => m[1]));
 
-console.log(`:root blocks with --background .......... ${light.length}`);
-console.log(`[data-theme="dark"] blocks with --bg .... ${dark.length}`);
+const blocks = findBlocks();
+const light = blocks.filter((b) => /:root/.test(b.sel));
+const dark = blocks.filter((b) => /\[data-theme=("|')?dark\1?\]|\.dark/.test(b.sel));
+
+console.log(`:root theme blocks ..................... ${light.length}`);
+console.log(`dark theme blocks ...................... ${dark.length}`);
 
 if (light.length !== 1) {
   console.log("\n!! expected exactly one :root theme block (CSS would be order-dependent)");
   process.exitCode = 1;
 }
 if (dark.length !== 1) {
-  console.log("\n!! expected exactly one [data-theme=\"dark\"] theme block (CSS would be order-dependent)");
+  console.log("\n!! expected exactly one dark theme block (CSS would be order-dependent)");
   process.exitCode = 1;
 }
+if (dark.length === 1) {
+  console.log(`dark selector ......................... ${dark[0].sel}`);
+}
 
-const L = light[0] ?? "";
-const D = dark[0] ?? "";
+const L = light[0]?.body ?? "";
+const D = dark[0]?.body ?? "";
+
+// Everything the app's utilities can reference. Checking them by name is the
+// point: a typo'd or dropped declaration in one theme block resolves to nothing
+// in that theme, and the element renders unstyled in exactly one mode.
 const keys = [
-  "--background", "--foreground", "--card", "--muted", "--accent",
-  "--border", "--input", "--ring", "--primary", "--destructive",
-  "--background-secondary", "--background-tertiary", "--background-hover",
-  "--border-hover", "--foreground-secondary", "--foreground-muted",
-  "--accent-pink", "--accent-purple",
-  "--radius", "--font-sans", "--spacing", "--tracking-normal",
+  "--background", "--foreground", "--card", "--card-foreground",
+  "--popover", "--popover-foreground", "--primary", "--primary-foreground",
+  "--secondary", "--secondary-foreground", "--muted", "--muted-foreground",
+  "--accent", "--accent-foreground", "--destructive", "--destructive-foreground",
+  "--border", "--input", "--ring",
+  "--chart-1", "--chart-2", "--chart-3", "--chart-4", "--chart-5",
+  "--sidebar", "--sidebar-foreground", "--sidebar-primary",
+  "--sidebar-primary-foreground", "--sidebar-accent",
+  "--sidebar-accent-foreground", "--sidebar-border", "--sidebar-ring",
+  "--success",
+  "--radius", "--spacing", "--tracking-normal",
+  "--font-sans", "--font-serif", "--font-mono",
 ];
 
-console.log("\n  " + "token".padEnd(26) + "dark".padEnd(34) + "light");
-console.log("  " + "-".repeat(96));
+console.log("\n  " + "token".padEnd(30) + "dark".padEnd(52) + "light");
+console.log("  " + "-".repeat(118));
 for (const k of keys) {
   const d = read(D, k);
   const l = read(L, k);
-  const flag = d === l && ["--background", "--foreground", "--card", "--muted"].includes(k) ? "  <-- identical" : "";
-  console.log("  " + k.padEnd(24) + d.padEnd(34) + l + flag);
+  const flag = d === "(absent)" || l === "(absent)" ? "  <-- MISSING" : "";
+  console.log("  " + k.padEnd(28) + d.padEnd(52) + l + flag);
+  if (d === "(absent)" || l === "(absent)") process.exitCode = 1;
+}
+
+// Parity: a token declared in one theme but not the other is the classic
+// half-migrated bug. It still works in one mode, so it is easy to ship and hard
+// to notice, which is why it is checked rather than trusted.
+if (light.length === 1 && dark.length === 1) {
+  const inLight = declared(L);
+  const inDark = declared(D);
+  const onlyLight = [...inLight].filter((t) => !inDark.has(t));
+  const onlyDark = [...inDark].filter((t) => !inLight.has(t));
+  console.log(`\ntoken counts: light ${inLight.size}, dark ${inDark.size}`);
+  if (onlyLight.length) {
+    console.log("  !! declared in :root only: " + onlyLight.join(" "));
+    process.exitCode = 1;
+  }
+  if (onlyDark.length) {
+    console.log("  !! declared in the dark block only: " + onlyDark.join(" "));
+    process.exitCode = 1;
+  }
+  if (!onlyLight.length && !onlyDark.length) {
+    console.log("ok: both themes declare the same token set.");
+  }
 }
 
 // Sanity: the default dark background must be dark, and text on it light.

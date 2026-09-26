@@ -165,9 +165,13 @@ function getRegionsForProvider(providerId: string) {
 // primitive. This app is mobile-first, and the OS picker is better on touch than
 // a custom popup list; a native select is also keyboard and screen-reader
 // accessible for free. The classes mirror Input so the two read as one control.
+// text-base below sm, not text-sm throughout: iOS zooms the viewport when
+// focusing a form control below 16px, which the old .input class handled with a
+// media query. The Input primitive already does the same, so the two read as one
+// control at every width.
 const SELECT_CLASSES = [
   'h-10 w-full min-w-0 appearance-none cursor-pointer rounded-md border border-input bg-transparent',
-  'px-2.5 py-1 pr-10 text-sm shadow-xs transition-[color,box-shadow] outline-none',
+  'px-2.5 py-1 pr-10 text-base shadow-xs transition-[color,box-shadow] outline-none sm:text-sm',
   'focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50',
   'disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
   'dark:bg-input/30',

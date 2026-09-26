@@ -54,15 +54,21 @@ const declaredUtilities = new Set(
   [...css.matchAll(/@utility\s+([a-z][a-z0-9-]*)/g)].map((m) => m[1]),
 );
 
-// Custom classes: every top-level class selector in index.css that is not also
-// a declared utility. shadcn's own styling comes from Tailwind utilities and
-// [data-slot] selectors, never from a bare class here, so this is exactly the
-// hand-written layer.
+// Theme-block selectors. `.dark` is a bare class selector, so the scan below
+// would otherwise pick it up as a custom class -- and then match every
+// `dark:` variant in the app as a reference to it, which is pure noise. These
+// are palette switches, not hand-written component styles.
+const THEME_SELECTORS = new Set([":root", "dark", "light"]);
+
+// Custom classes: every top-level class selector in index.css that is neither a
+// declared utility nor a theme-block selector. shadcn's own styling comes from
+// Tailwind utilities and [data-slot] selectors, never from a bare class here, so
+// this is exactly the hand-written layer.
 const customClasses = [
   ...new Set(
     [...css.matchAll(/^\.([a-z][a-z0-9-]*)/gm)]
       .map((m) => m[1])
-      .filter((c) => !declaredUtilities.has(c)),
+      .filter((c) => !declaredUtilities.has(c) && !THEME_SELECTORS.has(c)),
   ),
 ];
 
@@ -109,19 +115,32 @@ const files = [];
   }
 })(srcDir);
 
-const CLASS_RE = new RegExp(
-  `(?:^|[\\s"'\`])(?:[a-z0-9-]+:)*(${customClasses
-    .map((c) => c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-    .join("|")})(?=[\\s"'\`]|$)`,
-  "gm",
-);
+// Both patterns below are built from a list joined with "|". An empty list
+// would produce an empty alternation, which matches at every candidate
+// position and reports the empty string as the "name" -- so the class scan
+// would report hundreds of phantom references and the token scan would report
+// every hyphenated word ending in a colour prefix. Null instead of a
+// degenerate regex: null simply never matches.
+const alternation = (names) =>
+  names.length
+    ? names.map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")
+    : null;
 
-const TOKEN_RE = new RegExp(
-  `(?:bg|text|border|from|via|to|fill|stroke|ring|outline|shadow|divide|decoration|accent|caret|placeholder)-(${legacyTokens
-    .map((t) => t.replace(/^--/, "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-    .join("|")})(?![a-z0-9-])`,
-  "g",
-);
+const CLASS_RE = alternation(customClasses)
+  ? new RegExp(
+      `(?:^|[\\s"'\`])(?:[a-z0-9-]+:)*(${alternation(customClasses)})(?=[\\s"'\`]|$)`,
+      "gm",
+    )
+  : null;
+
+const TOKEN_RE = alternation(legacyTokens)
+  ? new RegExp(
+      `(?:bg|text|border|from|via|to|fill|stroke|ring|outline|shadow|divide|decoration|accent|caret|placeholder)-(${alternation(
+        legacyTokens.map((t) => t.replace(/^--/, "")),
+      )})(?![a-z0-9-])`,
+      "g",
+    )
+  : null;
 
 // Strip import statements and comments before scanning. Otherwise prose and
 // module specifiers register as usage: a comment reading "a real DOM table" was
@@ -150,10 +169,12 @@ let totalTokens = 0;
 
 for (const file of files) {
   const src = stripNonCode(fs.readFileSync(file, "utf8"));
-  const allClasses = [...src.matchAll(CLASS_RE)].map((m) => m[1]);
+  const allClasses = CLASS_RE
+    ? [...src.matchAll(CLASS_RE)].map((m) => m[1])
+    : [];
   // Split off the names Tailwind already provides; those are not migration work.
   const classes = allClasses.filter((c) => !TAILWIND_DUPLICATES.has(c));
-  const tokens = [...src.matchAll(TOKEN_RE)].map((m) => m[1]);
+  const tokens = TOKEN_RE ? [...src.matchAll(TOKEN_RE)].map((m) => m[1]) : [];
   if (!classes.length && !tokens.length) continue;
   totalClasses += classes.length;
   totalTokens += tokens.length;

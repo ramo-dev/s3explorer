@@ -1,10 +1,15 @@
 // Cross-checks that every Tailwind utility the app's own components reference
 // actually made it into the built stylesheet. Catches tokens that silently
 // stop resolving after a config or CSS-variable rename.
+//
+//   node scripts/check-utilities.mjs [path/to.css] [srcDir]
+//
+// With no CSS argument it picks the newest dist/assets/index-*.css.
 import fs from "node:fs";
 import path from "node:path";
+import { resolveBuiltCss } from "./lib/built-css.mjs";
 
-const cssFile = process.argv[2];
+const cssFile = resolveBuiltCss(process.argv[2]);
 const css = fs.readFileSync(cssFile, "utf8");
 const srcDir = process.argv[3] ?? "src";
 
@@ -41,15 +46,13 @@ const BASE = new RegExp(
     ")?[a-z0-9-]+$"
 );
 
-// Class names that are hand-written CSS in index.css, not Tailwind utilities.
-const NOT_TAILWIND = new Set([
-  "glass", "input", "sidebar-item", "sidebar-icon", "logo-themed", "logo-spin",
-  "skeleton", "stagger-item", "modal-backdrop", "modal-content", "modal-panel",
-  "create-bucket-btn", "bucket-scrollable", "nav-tab", "nav-tab-active",
-  "preview-nav-arrow", "command-palette", "welcome-message", "drop-overlay",
-  "toast", "spinner", "error-banner", "empty-state", "upload-progress",
-  "offline-indicator", "connection-card", "form-label", "form-error",
-]);
+// Names to skip. Deliberately empty: everything the app now styles with is a
+// real Tailwind utility, including the handful declared with @utility in
+// index.css, and those do appear in the built stylesheet. A hand-written class
+// selector would also satisfy the lookup below -- which is the correct outcome,
+// since check:legacy is what reports those. Flagging them here as well would be
+// duplicate noise rather than a second signal.
+const NOT_TAILWIND = new Set();
 
 const used = new Map();
 for (const [value, file] of classValues) {
@@ -76,6 +79,6 @@ for (const [util, file] of used) {
 
 console.log(`scanned ${files.length} app source files`);
 console.log(`distinct utilities referenced: ${used.size}`);
-console.log(`missing from ${path.basename(cssFile)}: ${missing.length}`);
+console.log(`missing from ${cssFile}: ${missing.length}`);
 for (const [util, file] of missing) console.log(`   ${util}  <-  ${file}`);
 process.exit(missing.length ? 1 : 0);

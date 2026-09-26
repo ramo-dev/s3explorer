@@ -149,34 +149,58 @@ export function Sidebar({
 
             {/* Buckets list */}
             <div className="flex-1 overflow-y-auto px-2.5 min-h-0 bucket-scrollable" role="list" aria-labelledby={`${idPrefix}-buckets-heading`}>
-                <div className="space-y-px">
+                <ul className="list-none space-y-px">
                     {filteredBuckets.map((bucket, i) => (
-                        <div
-                            key={bucket.name}
-                            className={cn('sidebar-item group stagger-item h-8 rounded-md', selectedBucket === bucket.name && 'active')}
-                            style={{ animationDelay: `${i * 30}ms` }}
-                            onClick={() => onBucketSelect(bucket.name)}
-                            onKeyDown={(e) => e.key === 'Enter' && onBucketSelect(bucket.name)}
-                            role="listitem"
-                            tabIndex={collapsed ? -1 : 0}
-                            aria-selected={selectedBucket === bucket.name}
-                            aria-label={`Bucket: ${bucket.name}`}
-                        >
-                            <Database className="sidebar-icon size-3.5 shrink-0" />
-                            <span className="flex-1 truncate text-xs">{bucket.name}</span>
-                            <div className="flex items-center gap-0.5 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                                <Button onClick={e => handleCopyBucketName(e, bucket.name)} variant="ghost" size="icon-xs" className="text-muted-foreground hover:text-primary" tabIndex={collapsed ? -1 : 0} aria-label={`Copy: ${bucket.name}`}>
-                                    {copiedBucket === bucket.name ? <Check className="text-success" /> : <Copy />}
-                                </Button>
-                                {!pinnedBucket && (
-                                    <Button onClick={e => { e.stopPropagation(); onDeleteBucket(bucket.name); }} variant="ghost" size="icon-xs" className="text-muted-foreground hover:text-destructive" tabIndex={collapsed ? -1 : 0} aria-label={`Delete: ${bucket.name}`}>
-                                        <Trash2 />
-                                    </Button>
+                        // The row is a plain container so the copy and delete buttons
+                        // are siblings of the select button rather than nested inside
+                        // it. The previous div[role=listitem] wrapped all three, which
+                        // made an interactive element sit inside another one, fired
+                        // only on Enter, and used aria-selected on a role that does
+                        // not support it.
+                        <li key={bucket.name} className="stagger-item" style={{ animationDelay: `${i * 30}ms` }}>
+                            <div
+                                className={cn(
+                                    'group flex h-8 items-center gap-0.5 rounded-md border transition-colors',
+                                    selectedBucket === bucket.name
+                                        ? 'border-border bg-background'
+                                        : 'border-transparent hover:border-border hover:bg-accent',
                                 )}
+                            >
+                                <button
+                                    type="button"
+                                    onClick={() => onBucketSelect(bucket.name)}
+                                    tabIndex={collapsed ? -1 : 0}
+                                    aria-current={selectedBucket === bucket.name || undefined}
+                                    aria-label={`Bucket: ${bucket.name}`}
+                                    className={cn(
+                                        'flex min-w-0 flex-1 items-center gap-2 rounded-md px-2.5 text-left text-xs transition-colors',
+                                        selectedBucket === bucket.name
+                                            ? 'text-foreground'
+                                            : 'text-muted-foreground hover:text-foreground',
+                                    )}
+                                >
+                                    <Database className={cn('size-3.5 shrink-0', selectedBucket === bucket.name && 'text-primary')} />
+                                    <span className="truncate">{bucket.name}</span>
+                                </button>
+                                {/* Revealed on hover, but group-focus-within keeps them
+                                    visible once a keyboard user tabs into them --
+                                    otherwise the buttons are focusable while
+                                    rendering at zero opacity, which is invisible
+                                    focus rather than no focus. */}
+                                <div className="flex items-center gap-0.5 pr-1.5 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
+                                    <Button onClick={e => handleCopyBucketName(e, bucket.name)} variant="ghost" size="icon-xs" className="text-muted-foreground hover:text-primary" tabIndex={collapsed ? -1 : 0} aria-label={`Copy: ${bucket.name}`}>
+                                        {copiedBucket === bucket.name ? <Check className="text-success" /> : <Copy />}
+                                    </Button>
+                                    {!pinnedBucket && (
+                                        <Button onClick={e => { e.stopPropagation(); onDeleteBucket(bucket.name); }} variant="ghost" size="icon-xs" className="text-muted-foreground hover:text-destructive" tabIndex={collapsed ? -1 : 0} aria-label={`Delete: ${bucket.name}`}>
+                                            <Trash2 />
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
-                        </div>
+                        </li>
                     ))}
-                </div>
+                </ul>
                 {filteredBuckets.length === 0 && !loading && (
                     <div className="py-8 text-center"><p className="text-sm text-muted-foreground">{debouncedSearch ? 'No matches' : 'No buckets'}</p></div>
                 )}

@@ -9,16 +9,12 @@
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
   <meta name="description" content="Secure, self-hosted S3 file explorer for managing buckets and objects" />
   <title>S3 Explorer</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
-    rel="stylesheet" />
   <style>
     /* Critical CSS - prevents flash of wrong color.
-       Must match --background in the [data-theme="dark"] block of index.css
-       (oklch(0.145 0 0)), or the app flashes light before the stylesheet
-       loads. */
+       Must match --background in the .dark, [data-theme="dark"] block of
+       index.css (oklch(0.145 0 0) = #0a0a0a), or the app flashes light before
+       the stylesheet loads. Kept as oklch rather than the hex so the two can be
+       compared without a conversion step. */
     html, body, #root {
       background-color: oklch(0.145 0 0);
       min-height: 100%;
