@@ -1,8 +1,8 @@
 import { useId, useState } from 'react';
+import { Modal } from '../Modal';
 import { Button } from '../ui/button';
 import { Field, FieldError, FieldLabel } from '../ui/field';
 import { Input } from '../ui/input';
-import { Modal } from '../Modal';
 
 interface NamePromptModalProps {
     title: string;

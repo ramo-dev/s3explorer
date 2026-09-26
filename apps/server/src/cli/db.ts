@@ -23,7 +23,7 @@ import path from 'node:path';
 // wrapping it in a constructor-shaped promise for no gain.
 import readline from 'node:readline/promises';
 import Database from 'better-sqlite3';
-import { DATA_DIR, DATA_DIR_IS_DEFAULT, DB_PATH, KEY_PATH, UPLOAD_TEMP_DIR, DB_SIDECAR_PATHS } from '../services/data-dir.js';
+import { DATA_DIR, DATA_DIR_IS_DEFAULT, DB_PATH, DB_SIDECAR_PATHS, KEY_PATH, UPLOAD_TEMP_DIR } from '../services/data-dir.js';
 
 // `db info | head` and `db sql "..." | grep` close the pipe while output is
 // still buffered. Node turns that into an unhandled 'error' on stdout and

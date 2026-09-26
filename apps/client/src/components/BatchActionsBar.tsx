@@ -1,5 +1,5 @@
-import { X } from 'lucide-react';
 import { cn } from 'cn';
+import { X } from 'lucide-react';
 import { Button } from './ui/button';
 
 interface BatchActionsBarProps {

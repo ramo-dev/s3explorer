@@ -1,20 +1,20 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import {
-  Search,
-  Database,
-  FolderPlus,
-  FolderArchive,
-  Upload,
-  RefreshCw,
-  Settings,
-  ArrowLeft,
-  Home,
-  ChevronRight,
-} from 'lucide-react';
 import { cn } from 'cn';
+import {
+  ArrowLeft,
+  ChevronRight,
+  Database,
+  FolderArchive,
+  FolderPlus,
+  Home,
+  RefreshCw,
+  Search,
+  Settings,
+  Upload,
+} from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { Bucket, CommandAction } from '../types';
 import { Input } from './ui/input';
 import { Kbd, KbdGroup } from './ui/kbd';
-import type { Bucket, CommandAction } from '../types';
 
 interface CommandPaletteProps {
   isOpen: boolean;

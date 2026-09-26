@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
-import { Check, X } from 'lucide-react';
 import { cn } from 'cn';
+import { Check, X } from 'lucide-react';
+import { useEffect } from 'react';
 
 interface ToastProps {
     message: string;

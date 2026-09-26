@@ -2,9 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { STORAGE_KEYS } from '../constants';
 import {
     EMPTY_FILTERS,
+    type FileFilters,
     parseFilterParams,
     writeFilterParams,
-    type FileFilters,
 } from '../utils/fileFilters';
 
 export type ViewMode = 'list' | 'grid';

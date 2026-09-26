@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { login, logout, getAuthStatus } from '../middleware/auth.js';
+import { getAuthStatus, login, logout } from '../middleware/auth.js';
 
 const router = Router();
 

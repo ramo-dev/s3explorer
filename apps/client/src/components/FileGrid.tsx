@@ -1,16 +1,16 @@
+import { cn } from 'cn';
+import { MoreHorizontal } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { FixedSizeGrid as Grid } from 'react-window';
-import { MoreHorizontal } from 'lucide-react';
-import { GRID, PAGINATION, gridColumnsFor } from '../constants';
-import type { S3Object } from '../types';
-import { formatBytes, formatDate } from '../utils/formatters';
-import { getFileName, getFileIcon } from '../utils/fileUtils';
+import { GRID, gridColumnsFor, PAGINATION } from '../constants';
 import { useElementSize } from '../hooks/useElementSize';
-import { cn } from 'cn';
+import type { S3Object } from '../types';
+import { getFileIcon, getFileName } from '../utils/fileUtils';
+import { formatBytes, formatDate } from '../utils/formatters';
+import { ObjectThumbnail } from './ObjectThumbnail';
 import { Button } from './ui/button';
 import { Checkbox } from './ui/checkbox';
 import { Spinner } from './ui/spinner';
-import { ObjectThumbnail } from './ObjectThumbnail';
 
 export interface FileGridProps {
     bucket: string;

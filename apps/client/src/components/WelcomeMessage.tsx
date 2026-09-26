@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { STORAGE_KEYS } from '../constants';
 
 interface WelcomeMessageProps {

@@ -1,23 +1,24 @@
-import { useState, useEffect, useCallback, useRef, useMemo, lazy, Suspense } from 'react';
+import { Database, Download, Edit3, Eye, FilterX, Folder, FolderArchive, Trash2 } from 'lucide-react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Folder, Database, Download, FolderArchive, Edit3, Trash2, Eye, FilterX } from 'lucide-react';
 import * as api from './api';
-import type { Bucket, S3Object, ToastState, ContextMenuState, SortField, SortDirection } from './types';
-import { getFileName, getParentPrefix, isPreviewable, triggerDownload } from './utils/fileUtils';
-import { applyFilters, isFiltersActive, type FileFilters } from './utils/fileFilters';
-import { resolveUploadConflicts, generateUniqueName, hasNameConflict } from './utils/uniqueName';
-import { useNetworkStatus } from './hooks/useNetworkStatus';
-import { useUrlLocation } from './hooks/useLocationUrl';
-import { Sidebar } from './components/Sidebar';
-import { Header } from './components/Header';
-import { FileTable } from './components/FileTable';
-import { EmptyState } from './components/EmptyState';
-import { Toast } from './components/Toast';
 import { ContextMenu, ContextMenuItem } from './components/ContextMenu';
-import { UploadProgress } from './components/UploadProgress';
 import { DropOverlay } from './components/DropOverlay';
+import { EmptyState } from './components/EmptyState';
 import { ErrorBanner } from './components/ErrorBanner';
+import { FileTable } from './components/FileTable';
+import { Header } from './components/Header';
 import { OfflineIndicator } from './components/OfflineIndicator';
+import { Sidebar } from './components/Sidebar';
+import { Toast } from './components/Toast';
+import { UploadProgress } from './components/UploadProgress';
+import { useUrlLocation } from './hooks/useLocationUrl';
+import { useNetworkStatus } from './hooks/useNetworkStatus';
+import type { Bucket, ContextMenuState, S3Object, SortDirection, SortField, ToastState } from './types';
+import { applyFilters, type FileFilters, isFiltersActive } from './utils/fileFilters';
+import { getFileName, getParentPrefix, isPreviewable, triggerDownload } from './utils/fileUtils';
+import { generateUniqueName, hasNameConflict, resolveUploadConflicts } from './utils/uniqueName';
+
 const CreateBucketModal = lazy(() => import('./components/modals/CreateBucketModal').then(m => ({ default: m.CreateBucketModal })));
 const CreateFolderModal = lazy(() => import('./components/modals/CreateFolderModal').then(m => ({ default: m.CreateFolderModal })));
 const RenameModal = lazy(() => import('./components/modals/RenameModal').then(m => ({ default: m.RenameModal })));
@@ -29,11 +30,12 @@ const SetupPage = lazy(() => import('./components/SetupPage').then(m => ({ defau
 const ConnectionManager = lazy(() => import('./components/ConnectionManager').then(m => ({ default: m.ConnectionManager })));
 const WelcomeMessage = lazy(() => import('./components/WelcomeMessage').then(m => ({ default: m.WelcomeMessage })));
 const FilePreviewModal = lazy(() => import('./components/FilePreviewModal').then(m => ({ default: m.FilePreviewModal })));
-import { BatchActionsBar } from './components/BatchActionsBar';
-import { Spinner } from './components/ui/spinner';
-import { Button } from './components/ui/button';
-import { STORAGE_KEYS } from './constants';
+
 import type { Connection } from './api';
+import { BatchActionsBar } from './components/BatchActionsBar';
+import { Button } from './components/ui/button';
+import { Spinner } from './components/ui/spinner';
+import { STORAGE_KEYS } from './constants';
 
 export default function App() {
   // Auth state

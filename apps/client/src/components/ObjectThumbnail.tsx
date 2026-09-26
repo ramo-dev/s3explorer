@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
 import { ImageOff } from 'lucide-react';
-import { GRID } from '../constants';
+import { useEffect, useRef, useState } from 'react';
 import { getProxyUrl } from '../api';
+import { GRID } from '../constants';
 import { getPreviewType } from '../utils/fileUtils';
 import { Skeleton } from './ui/skeleton';
 

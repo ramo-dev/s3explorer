@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
-import { X, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize } from 'lucide-react';
 import { cn } from 'cn';
+import { ChevronLeft, ChevronRight, Download, Maximize, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { getProxyUrl } from '../api';
 import type { S3Object } from '../types';
 import { getFileName, getPreviewType } from '../utils/fileUtils';
-import { getProxyUrl } from '../api';
 import { formatBytes } from '../utils/formatters';
 import { Button } from './ui/button';
 import { Dialog, DialogOverlay, DialogPortal, DialogTitle } from './ui/dialog';
@@ -124,7 +124,7 @@ export function FilePreviewModal({ object, bucket, onClose, onDownload, objects,
             // consistent *percentage* regardless of current zoom level. Dividing by
             // 300 normalizes between trackpad (small deltas) and mouse wheel (~100-120
             // per notch) so both feel smooth.
-            const factor = Math.pow(2, normalized);
+            const factor = 2 ** normalized;
             setZoom(z => Math.min(Math.max(z * factor, ZOOM_MIN), ZOOM_MAX));
         };
         container.addEventListener('wheel', handleWheel, { passive: false });

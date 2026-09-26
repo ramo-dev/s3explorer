@@ -1,5 +1,5 @@
 // Round-trip and edge-case checks for the URL location format. Not shipped.
-import { parseLocationUrl, buildLocationUrl } from '../src/hooks/useLocationUrl';
+import { buildLocationUrl, parseLocationUrl } from '../src/hooks/useLocationUrl';
 
 // Every location literal below is compared against a full parse, so they all
 // need the filters field. Named so the intent is obvious at each use.

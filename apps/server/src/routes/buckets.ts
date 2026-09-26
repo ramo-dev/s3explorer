@@ -1,6 +1,6 @@
-import { Router, Request, Response } from 'express';
-import * as s3 from '../services/s3.js';
+import { type Request, type Response, Router } from 'express';
 import { connections } from '../services/db.js';
+import * as s3 from '../services/s3.js';
 import { isValidBucketName } from '../utils/validation.js';
 
 const router = Router();

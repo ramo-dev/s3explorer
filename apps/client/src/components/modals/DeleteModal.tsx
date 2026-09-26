@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Spinner } from '../ui/spinner';
+import type { S3Object } from '../../types';
+import { getFileName } from '../../utils/fileUtils';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -10,8 +11,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '../ui/alert-dialog';
-import { getFileName } from '../../utils/fileUtils';
-import type { S3Object } from '../../types';
+import { Spinner } from '../ui/spinner';
 
 interface DeleteModalProps {
     object: S3Object | null;

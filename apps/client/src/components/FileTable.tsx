@@ -1,21 +1,20 @@
-import { useRef, useCallback, useEffect, useState, memo } from 'react';
-import { FixedSizeList as List } from 'react-window';
-import { MoreHorizontal, LayoutGrid, LayoutList } from 'lucide-react';
 import { cn } from 'cn';
-import type { S3Object, SortField, SortDirection } from '../types';
-import { formatBytes, formatDate } from '../utils/formatters';
-import { getFileName, getFileIcon } from '../utils/fileUtils';
+import { LayoutGrid, LayoutList, MoreHorizontal } from 'lucide-react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { FixedSizeList as List } from 'react-window';
 import { PAGINATION } from '../constants';
-import type { ViewMode } from '../hooks/useLocationUrl';
 import { useElementSize } from '../hooks/useElementSize';
+import type { ViewMode } from '../hooks/useLocationUrl';
+import type { S3Object, SortDirection, SortField } from '../types';
+import type { FileFilters } from '../utils/fileFilters';
+import { getFileIcon, getFileName } from '../utils/fileUtils';
+import { formatBytes, formatDate } from '../utils/formatters';
+import { FileGrid } from './FileGrid';
+import { FilterBar } from './FilterBar';
 import { Button } from './ui/button';
 import { Checkbox } from './ui/checkbox';
 import { Skeleton } from './ui/skeleton';
 import { Spinner } from './ui/spinner';
-import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group';
-import { FileGrid } from './FileGrid';
-import { FilterBar } from './FilterBar';
-import type { FileFilters } from '../utils/fileFilters';
 import {
     Table,
     TableBody,
@@ -24,6 +23,7 @@ import {
     TableHeader,
     TableRow,
 } from './ui/table';
+import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group';
 
 interface FileTableProps {
     /** Needed by grid thumbnails, which build proxy URLs. */

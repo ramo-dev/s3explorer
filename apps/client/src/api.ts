@@ -1,5 +1,5 @@
-import type { Bucket, S3Object } from './types';
 import { API_TIMEOUTS } from './constants';
+import type { Bucket, S3Object } from './types';
 
 const API_BASE = '/api';
 

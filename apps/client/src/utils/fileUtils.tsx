@@ -1,12 +1,12 @@
 import {
-    Folder,
-    File,
-    Image,
-    Film,
-    Music,
     Archive,
+    File,
     FileCode,
     FileText,
+    Film,
+    Folder,
+    Image,
+    Music,
 } from 'lucide-react';
 import { getFileCategory } from './fileFilters';
 

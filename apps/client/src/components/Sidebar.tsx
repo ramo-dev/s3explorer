@@ -1,12 +1,12 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Database, Plus, Trash2, Copy, Check, Settings, LogOut, Sun, Moon, PanelLeftClose, PanelLeft, X } from 'lucide-react';
 import { cn } from 'cn';
+import { Check, Copy, Database, LogOut, Moon, PanelLeft, PanelLeftClose, Plus, Settings, Sun, Trash2, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { UI_DELAYS } from '../constants';
+import { useDebounce } from '../hooks/useDebounce';
+import type { Bucket } from '../types';
 import { GithubIcon } from './GithubIcon';
 import { Button, buttonVariants } from './ui/button';
 import { Input } from './ui/input';
-import type { Bucket } from '../types';
-import { useDebounce } from '../hooks/useDebounce';
-import { UI_DELAYS } from '../constants';
 
 interface SidebarProps {
     buckets: Bucket[];

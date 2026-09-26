@@ -1,11 +1,10 @@
 "use client"
 
-import * as React from "react"
 import { Questionnaire as QuestionnairePrimitive } from "@shadcn/react/questionnaire"
 import { cn } from "cn"
-
-import { buttonVariants, type Button } from "@/components/ui/button"
 import { CheckIcon } from "lucide-react"
+import type * as React from "react"
+import { type Button, buttonVariants } from "@/components/ui/button"
 
 function Questionnaire({
   className,

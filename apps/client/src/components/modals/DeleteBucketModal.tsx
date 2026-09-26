@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Spinner } from '../ui/spinner';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -10,6 +9,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '../ui/alert-dialog';
+import { Spinner } from '../ui/spinner';
 
 interface DeleteBucketModalProps {
     bucketName: string | null;

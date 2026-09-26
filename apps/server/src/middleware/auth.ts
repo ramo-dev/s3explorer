@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
 import argon2 from 'argon2';
+import type { NextFunction, Request, Response } from 'express';
 import { rateLimits } from '../services/db.js';
 
 // Password validation helper (exported for setup route)

@@ -1,11 +1,11 @@
+import { AlertCircle, ArrowRight, Check } from 'lucide-react';
 import { useState } from 'react';
-import { ArrowRight, Check, AlertCircle } from 'lucide-react';
+import * as api from '../api';
 import { GithubIcon } from './GithubIcon';
 import { PasswordInput } from './PasswordInput';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Spinner } from './ui/spinner';
-import * as api from '../api';
 
 interface SetupPageProps {
     onSetupComplete: () => void;

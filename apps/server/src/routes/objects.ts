@@ -1,16 +1,17 @@
-import { Router, Request, Response } from 'express';
+import { type Request, type Response, Router } from 'express';
+import fs from 'fs';
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs';
 import * as s3 from '../services/s3.js';
 import * as zip from '../services/zip.js';
-import { isValidBucketName } from '../utils/validation.js';
 import { assertBucketAllowed } from '../utils/pinnedBucket.js';
+import { isValidBucketName } from '../utils/validation.js';
 
 const router = Router();
 
 // File size limit (per file)
 const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
+
 import { UPLOAD_TEMP_DIR } from '../services/data-dir.js';
 
 if (!fs.existsSync(UPLOAD_TEMP_DIR)) {

@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Plus, Check, Server, ChevronDown, AlertCircle, RefreshCw, ChevronRight, Pencil, Trash2 } from 'lucide-react';
 import { cn } from 'cn';
-import * as api from '../api';
+import { AlertCircle, Check, ChevronDown, ChevronRight, Pencil, Plus, RefreshCw, Server, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Connection, ConnectionConfig } from '../api';
+import * as api from '../api';
 import { Modal } from './Modal';
 import { Alert, AlertDescription } from './ui/alert';
 import {

@@ -1,15 +1,16 @@
 // Semantics checks for the filter predicates. Not shipped.
+
+import type { S3Object } from '../src/types';
 import {
   applyFilters,
+  DATE_PRESETS,
+  EMPTY_FILTERS,
   getFileCategory,
   isDateRangeActive,
   isFiltersActive,
   matchesFilters,
   parseISODate,
-  DATE_PRESETS,
-  EMPTY_FILTERS,
 } from '../src/utils/fileFilters';
-import type { S3Object } from '../src/types';
 
 let failures = 0;
 const check = (label: string, actual: unknown, expected: unknown) => {

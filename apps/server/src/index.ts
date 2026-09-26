@@ -1,19 +1,18 @@
 import 'dotenv/config';
+import crypto from 'crypto';
 import express from 'express';
 import session from 'express-session';
+import fs from 'fs';
 import helmet from 'helmet';
 import path from 'path';
-import fs from 'fs';
-import crypto from 'crypto';
 import { fileURLToPath } from 'url';
-
-import { SQLiteStore, preferences } from './services/db.js';
 import { requireAuth } from './middleware/auth.js';
 import authRouter from './routes/auth.js';
 import bucketsRouter from './routes/buckets.js';
-import objectsRouter from './routes/objects.js';
 import connectionsRouter from './routes/connections.js';
+import objectsRouter from './routes/objects.js';
 import setupRouter from './routes/setup.js';
+import { preferences, SQLiteStore } from './services/db.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -53,7 +52,6 @@ app.use(express.json({ limit: '10mb' }));
 // and return structured JSON without re-throwing.
 app.use((req, res, next) => {
   const originalJson = res.json;
-  // @ts-ignore
   res.json = function (body) {
     if (res.statusCode >= 500) {
       console.error(`[${req.method}] ${req.url} returned ${res.statusCode}:`, body);

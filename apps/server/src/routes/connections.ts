@@ -1,7 +1,7 @@
-import { Router, Request, Response } from 'express';
-import { connections, ConnectionRecord } from '../services/db.js';
+import { type Request, type Response, Router } from 'express';
 import { encryptAndPack, unpackAndDecrypt } from '../services/crypto.js';
-import { listBuckets, testBucketAccess, S3ConnectionConfig } from '../services/s3.js';
+import { ConnectionRecord, connections } from '../services/db.js';
+import { listBuckets, type S3ConnectionConfig, testBucketAccess } from '../services/s3.js';
 import { isValidBucketName, isValidRegion } from '../utils/validation.js';
 
 const router = Router();

@@ -1,22 +1,22 @@
-import { forwardRef, useMemo } from 'react';
+import { cn } from 'cn';
 import { ArrowDown, ArrowUp, CalendarDays, SlidersHorizontal, X } from 'lucide-react';
+import { forwardRef, useMemo } from 'react';
+import type { SortDirection, SortField } from '../types';
 import {
+    activeFilterCount,
     CATEGORY_SAMPLE_KEY,
     DATE_PRESETS,
     EMPTY_FILTERS,
-    SIZE_OPTIONS,
-    TYPE_OPTIONS,
-    activeFilterCount,
+    type FileFilters,
     isDateRangeActive,
     isFiltersActive,
     parseISODate,
-    toISODate,
-    type FileFilters,
+    SIZE_OPTIONS,
+    TYPE_OPTIONS,
     type TypeFilter,
+    toISODate,
 } from '../utils/fileFilters';
 import { getFileIcon } from '../utils/fileUtils';
-import type { SortDirection, SortField } from '../types';
-import { cn } from 'cn';
 import { Button } from './ui/button';
 import { Calendar } from './ui/calendar';
 import {

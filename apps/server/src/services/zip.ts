@@ -1,7 +1,7 @@
-import archiver, { Archiver } from 'archiver';
+import archiver, { type Archiver } from 'archiver';
 import crypto from 'crypto';
-import type { Readable } from 'stream';
 import type { Response } from 'express';
+import type { Readable } from 'stream';
 import * as s3 from './s3.js';
 
 // Zip downloads are a two-step handshake: POST validates the selection, expands

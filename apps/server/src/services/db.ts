@@ -1,7 +1,7 @@
-import Database, { Database as DatabaseType, Statement } from 'better-sqlite3';
-import fs from 'fs';
+import Database, { type Database as DatabaseType, Statement } from 'better-sqlite3';
 import { EventEmitter } from 'events';
 import session from 'express-session';
+import fs from 'fs';
 
 import { DATA_DIR, DB_PATH } from './data-dir.js';
 

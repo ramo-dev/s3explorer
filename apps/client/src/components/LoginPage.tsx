@@ -1,5 +1,6 @@
+import { ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
-import { Eye, EyeOff, ArrowRight } from 'lucide-react';
+import * as api from '../api';
 import { GithubIcon } from './GithubIcon';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
@@ -12,7 +13,6 @@ import {
   InputGroupInput,
 } from './ui/input-group';
 import { Spinner } from './ui/spinner';
-import * as api from '../api';
 
 interface LoginPageProps {
   onLogin: () => void;

@@ -1,5 +1,5 @@
-import { Spinner } from './ui/spinner';
 import { Progress } from './ui/progress';
+import { Spinner } from './ui/spinner';
 
 interface UploadProgressProps {
     uploading: boolean;
