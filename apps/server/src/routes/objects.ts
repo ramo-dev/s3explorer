@@ -117,6 +117,16 @@ router.get('/:bucket/proxy', async (req: Request, res: Response) => {
     if (contentLength) {
       res.setHeader('Content-Length', contentLength);
     }
+    // Grid view and the preview modal both re-request the same objects on every
+    // visit. Without an explicit lifetime the browser is free to revalidate or
+    // refetch, and scrolling back through a folder of photos re-downloads all
+    // of them. `private` because these are authenticated credentials-adjacent
+    // bytes that must not land in a shared cache.
+    //
+    // The cost is that replacing an object under an existing key is not visible
+    // for up to an hour. The upload flow already renames on collision rather
+    // than overwriting, so in practice a key's content is stable once written.
+    res.setHeader('Cache-Control', 'private, max-age=3600');
 
     // Handle stream errors during transfer
     const nodeStream = body as import('stream').Readable;
