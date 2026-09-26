@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback, useRef, useMemo, lazy, Suspense } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Folder, Database, Download, FolderArchive, Edit3, Trash2, Eye } from 'lucide-react';
+import { Folder, Database, Download, FolderArchive, Edit3, Trash2, Eye, FilterX } from 'lucide-react';
 import * as api from './api';
 import type { Bucket, S3Object, ToastState, ContextMenuState, SortField, SortDirection } from './types';
 import { getFileName, getParentPrefix, isPreviewable, triggerDownload } from './utils/fileUtils';
+import { applyFilters, isFiltersActive, type FileFilters } from './utils/fileFilters';
 import { resolveUploadConflicts, generateUniqueName, hasNameConflict } from './utils/uniqueName';
 import { useNetworkStatus } from './hooks/useNetworkStatus';
+import { useUrlLocation } from './hooks/useLocationUrl';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { FileTable } from './components/FileTable';
@@ -28,6 +30,8 @@ const ConnectionManager = lazy(() => import('./components/ConnectionManager').th
 const WelcomeMessage = lazy(() => import('./components/WelcomeMessage').then(m => ({ default: m.WelcomeMessage })));
 const FilePreviewModal = lazy(() => import('./components/FilePreviewModal').then(m => ({ default: m.FilePreviewModal })));
 import { BatchActionsBar } from './components/BatchActionsBar';
+import { Spinner } from './components/ui/spinner';
+import { Button } from './components/ui/button';
 import { STORAGE_KEYS } from './constants';
 import type { Connection } from './api';
 
@@ -46,9 +50,22 @@ export default function App() {
 
   // Bucket/Object state
   const [buckets, setBuckets] = useState<Bucket[]>([]);
-  const [selectedBucket, setSelectedBucket] = useState<string | null>(null);
+  // Bucket, folder, view mode and search all live in the URL. The hook returns
+  // setters with the same names and semantics as the useState calls they
+  // replaced, so every existing call site is unchanged.
+  const {
+    bucket: selectedBucket,
+    path: currentPath,
+    view: viewMode,
+    setBucket: setSelectedBucket,
+    setPath: setCurrentPath,
+    setView: setViewMode,
+    search: searchQuery,
+    setSearch: setSearchQuery,
+    filters,
+    setFilters,
+  } = useUrlLocation();
   const [objects, setObjects] = useState<S3Object[]>([]);
-  const [currentPath, setCurrentPath] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -56,7 +73,6 @@ export default function App() {
   // True while the server expands a zip selection; the browser's own download UI takes over after
   const [preparingZip, setPreparingZip] = useState(false);
   const [toast, setToast] = useState<ToastState | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   // Persisted to localStorage so the sidebar remembers its state across sessions
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -104,7 +120,10 @@ export default function App() {
   }, []);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const navigationStateRef = useRef<{ bucket: string | null; path: string }>({ bucket: null, path: '' });
+  // Distinguishes "buckets not fetched yet" from "fetched, and the list is
+  // empty", which matters because a user with no buckets is legitimate but a
+  // deep link that has not been validated yet must not be discarded.
+  const [bucketsLoaded, setBucketsLoaded] = useState(false);
 
   // Check auth on mount
   useEffect(() => {
@@ -193,7 +212,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedBucket]);
 
-  const showToastMsg = (message: string, type: 'success' | 'error' = 'success') => setToast({ message, type });
+  const showToastMsg = useCallback((message: string, type: 'success' | 'error' = 'success') => setToast({ message, type }), []);
 
   const loadBuckets = useCallback(async () => {
     try {
@@ -201,6 +220,7 @@ export default function App() {
       setError(null);
       const data = await api.listBuckets();
       setBuckets(data);
+      setBucketsLoaded(true);
     } catch (err: any) {
       if (err.message?.includes('No active S3 connection')) {
         setShowConnectionManager(true);
@@ -268,73 +288,20 @@ export default function App() {
     return () => { cancelled = true; };
   }, [selectedBucket, searchQuery]);
 
+  // Deep-link validation. A URL can name a bucket that does not exist on the
+  // active connection -- a shared link, a stale bookmark, a bucket deleted in
+  // another tab. Without this the app sits on a URL that can never resolve,
+  // showing a listing error for something the user cannot fix from here.
+  // Runs only after a successful bucket load, so it never fires on a network
+  // error and turn a transient failure into a lost location.
   useEffect(() => {
-    navigationStateRef.current = { bucket: selectedBucket, path: currentPath };
-  }, [selectedBucket, currentPath]);
-
-  // Browser history integration for folder navigation.
-  // isPopState and isInitialMount refs prevent duplicate pushState calls:
-  // - isPopState: when the user hits Back/Forward, we update state from the event
-  //   but must NOT push a new history entry in response (that would break the stack).
-  // - isInitialMount: on first render we replaceState instead of pushing, so
-  //   refreshing the page doesn't create a duplicate entry.
-  const isPopState = useRef(false);
-  useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      const state = event.state;
-      const nextBucket = state?.bucket || null;
-      const nextPath = state?.path || '';
-
-      // Ignore no-op popstate transitions
-      if (
-        navigationStateRef.current.bucket === nextBucket &&
-        navigationStateRef.current.path === nextPath
-      ) {
-        return;
-      }
-
-      isPopState.current = true;
-
-      if (state) {
-        setSelectedBucket(nextBucket);
-        setCurrentPath(nextPath);
-      } else {
-        // No state means we're at the initial page
-        setSelectedBucket(null);
-        setCurrentPath('');
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  // Push state when bucket or path changes (but not on initial load or popstate)
-  const isInitialMount = useRef(true);
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      // Replace initial state
-      window.history.replaceState(
-        { bucket: selectedBucket, path: currentPath },
-        '',
-        window.location.pathname
-      );
-      return;
-    }
-
-    if (isPopState.current) {
-      isPopState.current = false;
-      return;
-    }
-
-    // Push new state for user-initiated navigation
-    window.history.pushState(
-      { bucket: selectedBucket, path: currentPath },
-      '',
-      window.location.pathname
-    );
-  }, [selectedBucket, currentPath]);
+    if (!bucketsLoaded || !selectedBucket) return;
+    if (buckets.some(b => b.name === selectedBucket)) return;
+    setSelectedBucket(null);
+    setCurrentPath('');
+    setSearchQuery('');
+    showToastMsg(`Bucket "${selectedBucket}" is not available on this connection`, 'error');
+  }, [bucketsLoaded, buckets, selectedBucket, setSelectedBucket, setCurrentPath, setSearchQuery, showToastMsg]);
 
   // Upload flow: check connectivity first (fail fast), then auto-rename any
   // files that collide with existing names so the user never accidentally
@@ -540,6 +507,16 @@ export default function App() {
       setSortDirection('asc');
     }
   }, [sortField]);
+
+  // The size filter menu names an explicit direction rather than toggling, so it
+  // needs a setter that takes one. Both paths write the same two pieces of
+  // state, so a column header and the filter can never disagree.
+  const handleSortWithDirection = useCallback((field: SortField, direction: SortDirection) => {
+    setSortField(field);
+    setSortDirection(direction);
+  }, []);
+
+  const handleFiltersChange = useCallback((next: FileFilters) => setFilters(next), [setFilters]);
 
   const clearSelection = useCallback(() => {
     setSelectedKeys(new Set());
@@ -760,8 +737,13 @@ export default function App() {
   // When search is active, show search results instead of the current folder
   const sourceObjects = searchResults ?? objects;
 
+  // Filters run before sorting, not after: the sort comparator and every index
+  // into the result (the keyboard cursor, selection, pagination) then refer to
+  // the same list the user can see.
+  const filteredObjects = useMemo(() => applyFilters(sourceObjects, filters), [sourceObjects, filters]);
+
   const displayObjects = useMemo(() => {
-    return [...sourceObjects].sort((a, b) => {
+    return [...filteredObjects].sort((a, b) => {
       if (a.isFolder && !b.isFolder) return -1;
       if (!a.isFolder && b.isFolder) return 1;
 
@@ -781,7 +763,7 @@ export default function App() {
           return 0;
       }
     });
-  }, [sourceObjects, sortField, sortDirection]);
+  }, [filteredObjects, sortField, sortDirection]);
 
   // Ref mirrors the latest displayObjects so event callbacks (like handleSelectAll)
   // always see current data without needing displayObjects in their dependency arrays,
@@ -793,11 +775,8 @@ export default function App() {
   if (checkingAuth) {
     return (
       <div className="fixed inset-0 bg-background flex items-center justify-center" role="status" aria-live="polite">
-        <div className="text-foreground-muted" aria-label="Loading application">
-          <svg className="w-6 h-6 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
+        <div className="text-muted-foreground" aria-label="Loading application">
+          <Spinner className="size-6" aria-label="Loading application" />
         </div>
       </div>
     );
@@ -822,7 +801,7 @@ export default function App() {
       {/* Skip link for accessibility */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-background focus:px-4 focus:py-2 focus:rounded-md focus:ring-2 focus:ring-accent-pink focus:text-foreground"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-100 focus:bg-background focus:px-4 focus:py-2 focus:rounded-md focus:ring-2 focus:ring-ring focus:text-foreground"
       >
         Skip to main content
       </a>
@@ -877,12 +856,13 @@ export default function App() {
               title="No connection configured"
               description="Add an S3 connection to get started"
               action={
-                <button
+                <Button
                   onClick={() => setShowConnectionManager(true)}
-                  className="group mt-6 px-6 py-3 rounded-lg border border-dashed border-border text-foreground-secondary hover:text-accent-purple hover:border-accent-purple hover:bg-accent-purple/5 transition-all text-sm font-medium"
+                  variant="outline"
+                  className="group mt-6 border-dashed text-sm font-medium hover:border-primary hover:bg-primary/5 hover:text-primary"
                 >
                   Add Connection
-                </button>
+                </Button>
               }
             />
           ) : !selectedBucket ? (
@@ -891,14 +871,25 @@ export default function App() {
             <EmptyState icon={Database} title="Searching..." description="" />
           ) : searchResults && displayObjects.length === 0 ? (
             <EmptyState icon={Folder} title="No results" description="No files or folders match your search" />
+          ) : displayObjects.length === 0 && isFiltersActive(filters) ? (
+            // Distinct from "Empty folder": a filter that excludes everything
+            // must not tell the user to upload files into a full bucket.
+            <EmptyState
+              icon={FilterX}
+              title="Nothing matches these filters"
+              description={`${sourceObjects.length} loaded item${sourceObjects.length === 1 ? '' : 's'} hidden. Widen or clear the filters to see them.`}
+            />
           ) : displayObjects.length === 0 && !loading ? (
             <EmptyState icon={Folder} title="Empty folder" description="Drop files here to upload" />
           ) : (
             <FileTable
+              bucket={selectedBucket}
+              locationKey={`${selectedBucket ?? ''}${currentPath}`}
               objects={displayObjects}
               loading={loading}
               selectedKeys={selectedKeys}
               onNavigate={handleNavigate}
+              onPreview={setPreviewObject}
               onContextMenu={handleContextMenu}
               onSelect={handleSelect}
               onSelectAll={handleSelectAll}
@@ -909,6 +900,12 @@ export default function App() {
               hasMore={hasMore}
               loadingMore={loadingMore}
               onLoadMore={loadMore}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              filters={filters}
+              onFiltersChange={handleFiltersChange}
+              onSortWithDirection={handleSortWithDirection}
+              loadedCount={sourceObjects.length}
             />
           )}
         </div>

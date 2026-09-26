@@ -7,7 +7,13 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "db": "tsx src/cli/db.ts",
+    "db:info": "tsx src/cli/db.ts info",
+    "db:sql": "tsx src/cli/db.ts sql",
+    "db:backup": "tsx src/cli/db.ts backup",
+    "db:reset": "tsx src/cli/db.ts reset",
+    "db:nuke": "tsx src/cli/db.ts nuke"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.478.0",
@@ -20,13 +26,11 @@
     "helmet": "^8.1.0",
     "multer": "^1.4.5-lts.1"
   },
-  "overrides": {
-    "qs": "^6.16.0"
-  },
   "devDependencies": {
     "@types/archiver": "^6.0.4",
     "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^4.17.21",
+    "@types/express-serve-static-core": "^4.19.9",
     "@types/express-session": "^1.18.2",
     "@types/multer": "^1.4.11",
     "@types/node": "^20.10.5",

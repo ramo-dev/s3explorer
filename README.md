@@ -8,6 +8,8 @@ A secure, self-hosted web-based file manager for S3-compatible storage buckets.
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE.md)
 [![GitHub Stars](https://img.shields.io/github/stars/subratomandal/s3explorer?style=for-the-badge)](https://github.com/subratomandal/s3explorer)
 
+> **This is a fork.** Originally created by [@subratomandal](https://github.com/subratomandal) — see the credits below. This repository advances that work; it is not the upstream release. Images here (`ghcr.io/ramo-dev/s3explorer`) are built from this branch, so they may differ from what upstream ships.
+
 ### Overview
 
 Managing S3 buckets often requires command-line tools or provider-specific dashboards that vary significantly in usability. S3 Explorer unifies this experience by offering a single, consistent web interface to upload, download, and organize files across any S3-compatible provider.
@@ -25,15 +27,15 @@ Supported Providers:
 ### Screenshots
 
 <p>
-  <img src="https://raw.githubusercontent.com/subratomandal/s3explorer/main/apps/client/public/images/main.png" alt="S3 Explorer File manager interface" />
+  <img src="https://raw.githubusercontent.com/ramo-dev/s3explorer/main/apps/client/public/images/main.png" alt="S3 Explorer File manager interface" />
 </p>
 
 <p>
-  <img src="https://raw.githubusercontent.com/subratomandal/s3explorer/main/apps/client/public/images/connect.png" alt="S3 Explorer Bucket navigation" />
+  <img src="https://raw.githubusercontent.com/ramo-dev/s3explorer/main/apps/client/public/images/connect.png" alt="S3 Explorer Bucket navigation" />
 </p>
 
 <p>
-  <img src="https://raw.githubusercontent.com/subratomandal/s3explorer/main/apps/client/public/images/search.png" alt="S3 Explorer Connection manager" />
+  <img src="https://raw.githubusercontent.com/ramo-dev/s3explorer/main/apps/client/public/images/search.png" alt="S3 Explorer Connection manager" />
 </p>
 
 ### Architecture
@@ -127,7 +129,7 @@ Or skip these and configure through the setup wizard on first launch.
 #### Docker
 
 ```bash
-docker run -d --name s3explorer --restart unless-stopped -p 3000:3000 -e APP_PASSWORD='YourStr0ng!Pass#2024' -e SESSION_SECRET="$(openssl rand -hex 32)" -v s3explorer_data:/data ghcr.io/subratomandal/s3explorer:latest
+docker run -d --name s3explorer --restart unless-stopped -p 3000:3000 -e APP_PASSWORD='YourStr0ng!Pass#2024' -e SESSION_SECRET="$(openssl rand -hex 32)" -v s3explorer_data:/data ghcr.io/ramo-dev/s3explorer:latest
 ```
 
 #### Docker Compose
@@ -135,7 +137,7 @@ docker run -d --name s3explorer --restart unless-stopped -p 3000:3000 -e APP_PAS
 ```yaml
 services:
   s3-explorer:
-    image: ghcr.io/subratomandal/s3explorer:latest
+    image: ghcr.io/ramo-dev/s3explorer:latest
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -154,22 +156,45 @@ volumes:
 #### Local Development
 
 ```bash
-npm run install:all
+npm install
 
 export APP_PASSWORD='DevPassword123!'
 export SESSION_SECRET='dev-secret-not-for-production-use!!'
-export DATA_DIR='./data'
 
 npm run dev
 ```
 
+`DATA_DIR` does not need setting locally. With it unset the server stores its data in `apps/server/data`; containers set `DATA_DIR=/data` themselves. See [Environment Variables](#environment-variables).
+
 Backend runs on :3000, frontend on :5173.
+
+### Database Maintenance
+
+The server stores its SQLite database and AES-256-GCM encryption key in `DATA_DIR`. Both are reachable from a CLI that reads the same `DATA_DIR` the server does, so no prefix is needed locally:
+
+```bash
+npm run db:info                  # paths, sizes, row counts, integrity check
+npm run db:sql "SELECT * FROM connections"
+npm run db:backup                # consistent snapshot, default name is timestamped
+npm run db:backup ./before.db    # ...or to a chosen path
+npm run db:reset                 # delete all rows; keeps schema + encryption key
+npm run db -- help
+```
+
+`db:info` is the one to reach for first. It resolves and prints every path, runs `PRAGMA integrity_check`, and shows per-table row counts. It also says which `DATA_DIR` was used and whether that was a default, which is the first thing to check when a command reports an empty database.
+
+Two notes on `db:backup`:
+
+- It uses SQLite's online backup API rather than copying the file. The database runs in WAL mode, so committed writes can still be sitting in the `-wal` sidecar; a plain file copy silently omits them. Measured on a database with 4 MB of WAL, a file copy produced a backup missing 9 of 1000 rows.
+- A database backup is **not** a data-directory backup. The encrypted credentials in `connections` need `encryption.key` alongside the `.db` file, or they cannot be decrypted. The command warns about this every time.
+
+`db:reset` deletes every row but keeps the schema and the key, which is what you want to start over. Destructive commands prompt for confirmation and refuse to run without a TTY unless given `--yes`, so they cannot fire by accident in a pipeline or CI job.
 
 ### Environment Variables
 
 1. `APP_PASSWORD` (optional): Login password. Must be 12+ chars with upper, lower, number, special char. If not set, a setup wizard will appear on first launch to configure it.
 2. `SESSION_SECRET` (optional): Session signing key. Use `openssl rand -hex 32`. If not set, a random secret is generated (sessions will be lost on server restart). Can also be configured through the setup wizard.
-3. `DATA_DIR` (optional): SQLite/key storage path. Default: `/data`
+3. `DATA_DIR` (optional): Where the SQLite database and encryption key live. Defaults to `/data` when `NODE_ENV=production` and to `apps/server/data` otherwise. The development default is resolved from the package location rather than the working directory, so it does not change with where you run the command from. Container images set it explicitly, so the production default only applies if you run the server outside a container without setting it.
 4. `PORT` (optional): Server port. Default: `3000`
 5. `NODE_ENV` (optional): Environment (`production` / `development`)
 
@@ -252,8 +277,8 @@ Backend runs on :3000, frontend on :5173.
 
 ### License
 
-MIT
+MIT — see [LICENSE.md](LICENSE.md), copyright (c) 2026 Subrato Mandal. That notice is retained unmodified; forking, modifying and redistributing under the same terms is exactly what it permits.
 
-Created by [@subratomandal](https://github.com/subratomandal)
+Original work by [@subratomandal](https://github.com/subratomandal) — [upstream](https://github.com/subratomandal/s3explorer). Thank you.
 
 </small>

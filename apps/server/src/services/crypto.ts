@@ -1,9 +1,7 @@
 import crypto from 'crypto';
 import fs from 'fs';
-import path from 'path';
 
-const DATA_DIR = process.env.DATA_DIR || '/data';
-const KEY_PATH = path.join(DATA_DIR, 'encryption.key');
+import { DATA_DIR, KEY_PATH } from './data-dir.js';
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {

@@ -28,8 +28,13 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://fonts.gstatic.com"],
-      fontSrc: ["'self'", "https://fonts.googleapis.com", "https://fonts.gstatic.com"],
+      // 'unsafe-inline' covers the critical-CSS <style> block in index.html.
+      // No external style or font origins: both typefaces are bundled by
+      // @fontsource and emitted as same-origin woff2 assets, so allowing
+      // Google's font hosts here would be an outbound request the app never
+      // makes, and a CSP exception that outlives its reason.
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      fontSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "blob:"],
       connectSrc: ["'self'"],
     },

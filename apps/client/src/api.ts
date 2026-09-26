@@ -313,8 +313,19 @@ export async function searchObjects(
   return data.results;
 }
 
-export function getProxyUrl(bucket: string, key: string): string {
+/**
+ * URL for streaming an object through the server.
+ *
+ * `width` is a hint for server-side thumbnailing. The proxy route ignores
+ * unknown query params, so passing it today costs nothing and changes nothing;
+ * its purpose is that the URL shape is already correct when resizing lands, so
+ * adopting it is a server-side change with no client churn. Until then the
+ * browser receives the full object, which is why callers gate thumbnails on
+ * size rather than assuming a resize happened.
+ */
+export function getProxyUrl(bucket: string, key: string, width?: number): string {
   const params = new URLSearchParams({ key });
+  if (width) params.set('w', String(width));
   return `${API_BASE}/objects/${encodeURIComponent(bucket)}/proxy?${params}`;
 }
 

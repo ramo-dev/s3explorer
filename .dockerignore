@@ -1,0 +1,42 @@
+# Build context. The Dockerfile installs dependencies from the manifests inside
+# the image, so any host node_modules must stay out -- copying them in would
+# overwrite pnpm's symlinked tree and break the build.
+
+node_modules
+**/node_modules
+.pnpm-store
+
+# Build outputs are produced inside the image
+dist
+**/dist
+*.tsbuildinfo
+
+# VCS / CI
+.git
+.github
+.gitignore
+
+# Local env & runtime data (credentials, session keys, sqlite files)
+.env
+.env.*
+!.env.example
+data
+apps/server/data
+*.db
+*.db-shm
+*.db-wal
+encryption.key
+
+# Editor / OS / logs
+.idea
+.vscode
+.DS_Store
+*.log
+*.swp
+*.swo
+
+# Docs & compose files not needed to build
+README.md
+CONTRIBUTING.md
+LICENSE.md
+docker-compose.yml

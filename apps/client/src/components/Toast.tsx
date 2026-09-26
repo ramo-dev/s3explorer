@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Check, X } from 'lucide-react';
+import { cn } from 'cn';
 
 interface ToastProps {
     message: string;
@@ -14,22 +15,27 @@ export function Toast({ message, type = 'success', onClose }: ToastProps) {
     }, [onClose]);
 
     const isSuccess = type === 'success';
-    const bgColor = isSuccess ? 'bg-accent-green/20' : 'bg-accent-red/20';
-    const textColor = isSuccess ? 'text-accent-green' : 'text-accent-red';
-    const borderColor = 'border-border';
-    const iconBg = isSuccess ? 'bg-accent-green' : 'bg-accent-red';
 
     return (
         <div
-            className={`toast fixed bottom-5 right-5 z-50 mb-safe flex items-center gap-2.5 px-3.5 py-2.5 rounded-md text-xs font-medium ${bgColor} ${textColor} border ${borderColor}`}
+            className={cn(
+                'fixed right-5 bottom-5 z-50 mb-safe flex items-center gap-2.5 rounded-md border border-border px-3.5 py-2.5 text-xs font-medium animate-slide-in-right',
+                isSuccess ? 'bg-success/20 text-success' : 'bg-destructive/20 text-destructive',
+            )}
             role="alert"
             aria-live="polite"
         >
-            <div className={`w-5 h-5 rounded-full flex items-center justify-center ${iconBg}`} aria-hidden="true">
+            <div
+                className={cn(
+                    'flex size-5 items-center justify-center rounded-full text-white',
+                    isSuccess ? 'bg-success' : 'bg-destructive',
+                )}
+                aria-hidden="true"
+            >
                 {isSuccess ? (
-                    <Check className="w-3 h-3 text-white" />
+                    <Check className="size-3" />
                 ) : (
-                    <X className="w-3 h-3 text-white" />
+                    <X className="size-3" />
                 )}
             </div>
             {message}

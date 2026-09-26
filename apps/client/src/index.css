@@ -1,897 +1,579 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-/* High-quality text rendering for all screens */
-html {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  font-feature-settings: "kern" 1, "liga" 1;
+/*
+  Both fonts are bundled rather than fetched. @fontsource-variable/outfit
+  registers the family as "Outfit Variable" and @fontsource-variable/
+  jetbrains-mono as "JetBrains Mono Variable" -- neither is the name Google
+  Fonts uses for the same typefaces, which is why the values below quote the
+  fontsource names. Bundling them keeps the app off Google's CDN entirely, so
+  the server's CSP needs no font host allowlist.
+*/
+@import "@fontsource-variable/outfit";
+@import "@fontsource-variable/jetbrains-mono";
+
+/*
+  The app themes on [data-theme] rather than Tailwind's default .dark, so the
+  stock variant is redefined. Both selectors are listed so a bare .dark class
+  also works, which is what the shadcn primitives assume and what makes a
+  future move to a .class-based theming library a one-line change.
+
+  The app itself uses no dark: utilities -- it swaps the token values in the
+  palette blocks below -- so this variant is purely additive for the
+  primitives, which do use it.
+*/
+@custom-variant dark (&:is(.dark *, [data-theme="dark"] *));
+
+/*
+  Colours are declared `inline` so the generated utilities reference the custom
+  properties directly instead of baking in a resolved value. That is what lets
+  the app switch theme at runtime by setting `data-theme` on <html> -- the
+  utilities below resolve to whichever block is currently active.
+
+  The v3 config defined these through a `token()` helper that faked opacity
+  support with `rgb(from var(--x) r g b / <alpha-value>)`, because v3 can't
+  derive an alpha from an opaque var(). v4 does that natively via color-mix(),
+  so the helper is gone and these are plain references.
+*/
+@theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+
+    /*
+    shadcn has no success colour, but the app needs one: the "Active" badge on
+    a connection, the tick on a valid password requirement, and success toasts.
+    Declaring it here rather than reviving the old --accent-green keeps it
+    themeable from one place like every other colour.
+  */
+    --color-success: var(--success);
+
+    --font-sans: var(--font-sans);
+    --font-mono: var(--font-mono);
+    --font-serif: var(--font-serif);
+
+    /*
+    The shadcn preset derives these from --radius (0.625rem) but only shifts
+    it for sm, leaving --radius-lg pinned at 0.5rem -- i.e. smaller than md, so
+    rounded-lg would render tighter than rounded-md. Offsets are applied on
+    both sides instead, keeping the scale monotonic:
+
+      sm 0.5rem < md 0.625rem < lg 0.75rem < xl 0.875rem < 2xl 1.125rem
+  */
+    --radius-sm: calc(var(--radius) - 2px);
+    --radius-md: var(--radius);
+    --radius-lg: calc(var(--radius) + 2px);
+    --radius-xl: calc(var(--radius) + 6px);
+
+    --shadow-2xs: var(--shadow-2xs);
+    --shadow-xs: var(--shadow-xs);
+    --shadow-sm: var(--shadow-sm);
+    --shadow: var(--shadow);
+    --shadow-md: var(--shadow-md);
+    --shadow-lg: var(--shadow-lg);
+    --shadow-xl: var(--shadow-xl);
+    --shadow-2xl: var(--shadow-2xl);
+
+    --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
+    --tracking-tight: calc(var(--tracking-normal) - 0.025em);
+    --tracking-normal: var(--tracking-normal);
+    --tracking-wide: calc(var(--tracking-normal) + 0.025em);
+    --tracking-wider: calc(var(--tracking-normal) + 0.05em);
+    --tracking-widest: calc(var(--tracking-normal) + 0.1em);
+    --font-heading: var(--font-sans);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-* {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/*
+  App-specific animations. Fonts, radii, colours and shadows are all declared
+  in the palette blocks below, so they are intentionally absent here.
+
+  The @keyframes themselves live at the bottom of this file, outside @theme.
+  Keyframes nested in @theme are emitted only when the matching --animate-*
+  utility is used, and two of them below are also referenced by custom utility
+  declarations that Tailwind cannot see a dependency from. Top-level keyframes
+  are always emitted verbatim, so the reference here is one-directional and safe.
+*/
+@theme {
+    --animate-fade-in: fadeIn 200ms ease;
+    --animate-slide-in: slideIn 200ms ease;
+    --animate-fade-in-up: fadeInUp 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    --animate-fade-in-down: fadeInDown 300ms cubic-bezier(0.22, 1, 0.36, 1);
+    --animate-slide-in-right: slideInRight 300ms cubic-bezier(0.22, 1, 0.36, 1);
+    --animate-slide-up-fade: slideUpFade 300ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Crisp rendering on high-DPI displays */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  html {
-    text-rendering: geometricPrecision;
-  }
-}
-
+/*
+  Light palette. index.html ships data-theme="dark" by default, so this block
+  is the fallback for the rare case the attribute is absent.
+*/
 :root {
-  color-scheme: dark;
-  --background: hsl(250, 24%, 9%);
-  --background-secondary: hsl(250, 21%, 11%);
-  --background-tertiary: hsl(250, 18%, 14%);
-  --background-hover: hsl(250, 18%, 18%);
-  --border: hsl(250, 15%, 20%);
-  --border-hover: hsl(250, 15%, 30%);
-  --foreground: hsl(0, 0%, 100%);
-  --foreground-secondary: hsl(250, 10%, 70%);
-  --foreground-muted: hsl(250, 10%, 50%);
-  --accent-pink: #C049FF;
-  --accent-purple: #9333EA;
-  --accent-green: #4ADE80;
-  --accent-blue: #3B82F6;
-  --accent-yellow: #FACC15;
-  --accent-red: #EF4444;
+    color-scheme: light;
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.505 0.213 27.518);
+    --primary-foreground: oklch(0.971 0.013 17.38);
+    --secondary: oklch(0.967 0.001 286.375);
+    --secondary-foreground: oklch(0.21 0.006 285.885);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(1.0000 0 0);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+    --chart-1: oklch(0.808 0.114 19.571);
+    --chart-2: oklch(0.637 0.237 25.331);
+    --chart-3: oklch(0.577 0.245 27.325);
+    --chart-4: oklch(0.505 0.213 27.518);
+    --chart-5: oklch(0.444 0.177 26.899);
+    --sidebar: oklch(0.985 0 0);
+    --sidebar-foreground: oklch(0.145 0 0);
+    --sidebar-primary: oklch(0.577 0.245 27.325);
+    --sidebar-primary-foreground: oklch(0.971 0.013 17.38);
+    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-border: oklch(0.922 0 0);
+    --sidebar-ring: oklch(0.708 0 0);
+    --font-sans: 'Outfit Variable', ui-sans-serif, system-ui, sans-serif;
+    --font-serif: Georgia, serif;
+    --font-mono: 'JetBrains Mono Variable', ui-monospace, Menlo, monospace;
+    --radius: 0.625rem;
+    --shadow-x: 0px;
+    --shadow-y: 1px;
+    --shadow-blur: 4px;
+    --shadow-spread: 0px;
+    --shadow-opacity: 0.05;
+    --shadow-color: 0 0 0;
+    --shadow-2xs: 0px 1px 4px 0px hsl(0 0 0 / 0.03);
+    --shadow-xs: 0px 1px 4px 0px hsl(0 0 0 / 0.03);
+    --shadow-sm: 0px 1px 4px 0px hsl(0 0 0 / 0.05), 0px 1px 2px -1px hsl(0 0 0 / 0.05);
+    --shadow: 0px 1px 4px 0px hsl(0 0 0 / 0.05), 0px 1px 2px -1px hsl(0 0 0 / 0.05);
+    --shadow-md: 0px 1px 4px 0px hsl(0 0 0 / 0.05), 0px 2px 4px -1px hsl(0 0 0 / 0.05);
+    --shadow-lg: 0px 1px 4px 0px hsl(0 0 0 / 0.05), 0px 4px 6px -1px hsl(0 0 0 / 0.05);
+    --shadow-xl: 0px 1px 4px 0px hsl(0 0 0 / 0.05), 0px 8px 10px -1px hsl(0 0 0 / 0.05);
+    --shadow-2xl: 0px 1px 4px 0px hsl(0 0 0 / 0.13);
+    --tracking-normal: -0.01em;
+    --spacing: 0.30rem;
+    --success: #16a34a;
 }
 
-/* Light theme */
-[data-theme="light"] {
-  color-scheme: light;
-  --background: hsl(220, 20%, 97%);
-  --background-secondary: hsl(0, 0%, 100%);
-  --background-tertiary: hsl(220, 20%, 94%);
-  --background-hover: hsl(220, 20%, 90%);
-  --border: hsl(220, 15%, 85%);
-  --border-hover: hsl(220, 15%, 75%);
-  --foreground: hsl(220, 30%, 15%);
-  --foreground-secondary: hsl(220, 15%, 40%);
-  --foreground-muted: hsl(220, 10%, 55%);
-  --accent-pink: #9333EA;
-  --accent-purple: #7C3AED;
-  --accent-green: #16A34A;
-  --accent-blue: #2563EB;
-  --accent-yellow: #CA8A04;
-  --accent-red: #DC2626;
+/*
+  Dark palette -- the app's default, set as data-theme="dark" in index.html.
+
+  The shadcn preset appends its own dark block at the end of this file. Rather
+  than leave two rules matching the same attribute where whichever happens to
+  come last silently wins, the preset's values were folded in here. `.dark` is
+  listed alongside the attribute so a class-based theme would also work; the app
+  never sets it.
+*/
+.dark,
+[data-theme="dark"] {
+    color-scheme: dark;
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.444 0.177 26.899);
+    --primary-foreground: oklch(0.971 0.013 17.38);
+    --secondary: oklch(0.274 0.006 286.033);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --destructive-foreground: oklch(1 0 0);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.556 0 0);
+    --chart-1: oklch(0.808 0.114 19.571);
+    --chart-2: oklch(0.637 0.237 25.331);
+    --chart-3: oklch(0.577 0.245 27.325);
+    --chart-4: oklch(0.505 0.213 27.518);
+    --chart-5: oklch(0.444 0.177 26.899);
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.637 0.237 25.331);
+    --sidebar-primary-foreground: oklch(0.971 0.013 17.38);
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(1 0 0 / 10%);
+    --sidebar-ring: oklch(0.556 0 0);
+    --font-sans: 'Outfit Variable', ui-sans-serif, system-ui, sans-serif;
+    --font-serif: Georgia, serif;
+    --font-mono: 'JetBrains Mono Variable', ui-monospace, Menlo, monospace;
+    --radius: 0.625rem;
+    --shadow-x: 0px;
+    --shadow-y: 2px;
+    --shadow-blur: 8px;
+    --shadow-spread: 0px;
+    --shadow-opacity: 0.4;
+    --shadow-color: 0 0 0;
+    --shadow-2xs: 0px 2px 8px 0px hsl(0 0 0 / 0.20);
+    --shadow-xs: 0px 2px 8px 0px hsl(0 0 0 / 0.20);
+    --shadow-sm: 0px 2px 8px 0px hsl(0 0 0 / 0.40), 0px 1px 2px -1px hsl(0 0 0 / 0.40);
+    --shadow: 0px 2px 8px 0px hsl(0 0 0 / 0.40), 0px 1px 2px -1px hsl(0 0 0 / 0.40);
+    --shadow-md: 0px 2px 8px 0px hsl(0 0 0 / 0.40), 0px 2px 4px -1px hsl(0 0 0 / 0.40);
+    --shadow-lg: 0px 2px 8px 0px hsl(0 0 0 / 0.40), 0px 4px 6px -1px hsl(0 0 0 / 0.40);
+    --shadow-xl: 0px 2px 8px 0px hsl(0 0 0 / 0.40), 0px 8px 10px -1px hsl(0 0 0 / 0.40);
+    --shadow-2xl: 0px 2px 8px 0px hsl(0 0 0 / 1.00);
+    --tracking-normal: -0.01em;
+    --spacing: 0.30rem;
+    --success: #4ade80;
 }
 
-/* Light theme specific adjustments */
-[data-theme="light"] .glass {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-}
+@layer base {
 
-* {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-}
+    /*
+    v4 changed the default border colour to `currentcolor`. Restoring the
+    themed default means a bare `border` picks up --border again, as it did
+    under the v3 palette.
+  */
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        @apply border-border outline-ring/50;
+    }
 
-/* Instant theme transition */
+    html {
+        @apply font-sans;
+        min-height: 100%;
+        background: var(--background);
+        /* High-quality text rendering for all screens. */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+        font-feature-settings: "kern" 1, "liga" 1;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+        letter-spacing: var(--tracking-normal);
+        margin: 0;
+        min-height: 100%;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    #root {
+        min-height: 100vh;
+        background: var(--background);
+        position: relative;
+    }
+
+    *,
+    ::after,
+    ::before {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /*
+    Scrollbars are hidden by default but scrolling still works, so panels do
+    not sprout a permanent gutter they were not designed around. Anything that
+    genuinely needs a visible scrollbar opts back in with `bucket-scrollable`.
+  */
+    * {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    *::-webkit-scrollbar {
+        display: none;
+    }
+
+    kbd {
+        font-family: inherit;
+    }
+
+    /*
+    Focus indicators. This lives in the base layer, which is deliberate: the
+    shadcn primitives carry their own focus-visible:ring *and* outline-none,
+    and because a utility outranks the base layer that outline-none wins. So
+    this rule styles exactly the controls that have no focus ring of their own
+    -- the raw buttons in BatchActionsBar, the breadcrumb triggers, the
+    connection rows -- and never doubles up on a primitive that already has one.
+  */
+    button:focus-visible,
+    a:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
+    }
+
+    input:focus-visible,
+    textarea:focus-visible {
+        outline: none;
+    }
+
+    /*
+    Layout containment on the two chrome regions. Isolates their internal
+    layout so scrolling a long file list does not recalculate the sidebar or
+    header, and keeps a reflow in one from forcing a paint in the other.
+  */
+    aside {
+        contain: style;
+    }
+
+    header {
+        contain: layout;
+    }
+}
 
 /* Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }
 
-html {
-  min-height: 100%;
-  background: var(--background);
+/* Crisp rendering on high-DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2),
+(min-resolution: 192dpi) {
+    html {
+        text-rendering: geometricPrecision;
+    }
 }
 
-body {
-  margin: 0;
-  padding: 0;
-  min-height: 100%;
-  background: var(--background);
-  color: var(--foreground);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/*
+  The handful of utilities that cannot be expressed as one line of Tailwind
+  classes. Everything else in the app is a utility or a shadcn primitive.
+*/
+
+/*
+  The bucket list is long enough to need a scrollbar, and hiding it there makes
+  the list look truncated with no affordance for the rows below the fold.
+*/
+@utility bucket-scrollable {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+
+    &::-webkit-scrollbar {
+        display: block;
+        width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+        background: var(--muted-foreground);
+    }
 }
 
-#root {
-  min-height: 100vh;
-  background: var(--background);
-  position: relative;
+/*
+  Staggered entrance for list rows, driven by an inline animation-delay per
+  row. Kept as a utility rather than spelled out at each call site: the opacity
+  floor plus `forwards` is what leaves the element visible after the animation,
+  and dropping either is a silent bug that renders the row invisible forever.
+*/
+@utility stagger-item {
+    opacity: 0;
+    animation: fadeInUp 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Hide scrollbars by default but allow scrolling */
-* {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+/*
+  The logo is a single dark artwork used on both a white and a near-black
+  background, so it is inverted for dark mode. filter is the only lever that
+  works on an <img> without shipping a second asset, and the two drop-shadows
+  keep the mark from disappearing into the surface it sits on.
+*/
+@utility logo-themed {
+    filter: invert(1) !important;
+    image-rendering: -webkit-optimize-contrast;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+
+    &:hover {
+        filter: invert(1) drop-shadow(0 0 4px rgb(255 255 255 / 0.25)) !important;
+    }
+
+    [data-theme="light"] & {
+        filter: invert(0) !important;
+    }
+
+    [data-theme="light"] &:hover {
+        filter: invert(0) drop-shadow(0 0 4px rgb(0 0 0 / 0.15)) !important;
+    }
 }
 
-*::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+@utility logo-spin {
+    transition: transform 0.4s ease;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+
+    &:hover {
+        animation: logoSpin 2.5s linear infinite;
+    }
 }
 
-/* Show thin scrollbar for bucket list */
-.bucket-scrollable {
-  scrollbar-width: thin; /* Firefox */
-  scrollbar-color: var(--border-hover) transparent;
+/*
+  Create-bucket gets a glow on hover to mark it as the one action in the
+  sidebar header. Only the glow lives here; the box comes from Button.
+*/
+@utility create-bucket-btn {
+    &:hover {
+        text-shadow: 0 0 8px var(--primary);
+        filter: drop-shadow(0 0 3px var(--primary));
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+    }
 }
 
-.bucket-scrollable::-webkit-scrollbar {
-  display: block;
-  width: 4px;
+/*
+  Lifts fixed bottom elements (toasts, batch bar, offline pill) above the home
+  indicator. viewport-fit=cover extends the page beneath it, so their bottom-*
+  offset alone would leave them partly covered on notched phones.
+*/
+@utility mb-safe {
+    margin-bottom: env(safe-area-inset-bottom);
 }
 
-.bucket-scrollable::-webkit-scrollbar-track {
-  background: transparent;
+@utility pb-safe {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
 }
 
-.bucket-scrollable::-webkit-scrollbar-thumb {
-  background: var(--border-hover);
-  border-radius: 4px;
-}
+/*
+  Keyframes for the --animate-* entries above.
 
-.bucket-scrollable::-webkit-scrollbar-thumb:hover {
-  background: var(--foreground-muted);
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.375rem;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  border-radius: 0.375rem;
-  border: none;
-  cursor: pointer;
-  transition: background 50ms ease, color 50ms ease, transform 50ms ease, filter 50ms ease;
-  outline: none;
-  white-space: nowrap;
-  touch-action: manipulation;
-}
-
-.btn:focus-visible {
-  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--accent-pink);
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none !important;
-}
-
-.btn:hover:not(:disabled) {
-  background: var(--background-hover);
-}
-
-.btn:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-.btn-primary {
-  background: var(--accent-pink);
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: var(--accent-pink);
-  filter: brightness(1.1);
-}
-
-.btn-primary:active:not(:disabled) {
-  filter: brightness(0.95);
-  opacity: 1;
-}
-
-/* Fix for label acting as button (upload) */
-label.btn {
-  -webkit-tap-highlight-color: transparent;
-}
-
-label.btn:focus-within {
-  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--accent-pink);
-}
-
-.btn-secondary {
-  background: var(--background-tertiary);
-  color: var(--foreground);
-  border: 1px solid var(--border);
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: var(--background-hover);
-  border-color: var(--border-hover);
-}
-
-.btn-ghost {
-  background: transparent;
-  color: var(--foreground-secondary);
-  padding: 0.375rem;
-}
-
-.btn-ghost:hover:not(:disabled) {
-  background: var(--background-hover);
-  color: var(--foreground);
-}
-
-.btn-ghost:active:not(:disabled) {
-  background: var(--background-hover);
-  opacity: 1;
-}
-
-.btn-danger {
-  background: var(--accent-red);
-  color: white;
-}
-
-.btn-danger:hover:not(:disabled) {
-  background: var(--accent-red);
-  filter: brightness(1.1);
-}
-
-.btn-icon {
-  padding: 0.375rem;
-  border-radius: 0.375rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Ensure icon buttons have consistent background coverage */
-.btn-icon:hover:not(:disabled) {
-  background: var(--background-hover);
-}
-
-.btn-icon:active:not(:disabled) {
-  background: var(--background-hover);
-  opacity: 0.9;
-}
-
-.input {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  background: var(--background);
-  border: 1px solid var(--border);
-  border-radius: 0.375rem;
-  color: var(--foreground);
-  font-size: 0.8125rem;
-  transition: all 50ms ease;
-  outline: none;
-}
-
-.input:hover:not(:focus) {
-  border-color: var(--border-hover);
-}
-
-.input:focus {
-  border-color: var(--accent-pink);
-}
-
-.input::placeholder {
-  color: var(--foreground-muted);
-}
-
-select.input {
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-  padding-right: 2.5rem;
-}
-
-select.input option {
-  background: var(--background-secondary);
-  color: var(--foreground);
-  padding: 0.5rem;
-}
-
-.card {
-  background: var(--background-secondary);
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  overflow: hidden;
-}
-
-.sidebar-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.375rem 0.625rem;
-  border-radius: 0.25rem;
-  cursor: pointer;
-  transition: background 50ms ease, color 50ms ease, border-color 50ms ease;
-  color: var(--foreground-secondary);
-  font-size: 0.8125rem;
-  border: 1px solid transparent;
-  background: transparent;
-  touch-action: manipulation;
-  text-decoration: none;
-}
-
-.sidebar-item:hover {
-  background: var(--background-hover);
-  color: var(--foreground);
-  border-color: var(--border);
-}
-
-.sidebar-item:active {
-  opacity: 0.8;
-}
-
-.sidebar-item.active {
-  background: var(--background);
-  color: var(--foreground);
-  border: 1px solid var(--border);
-}
-
-.sidebar-item.active .sidebar-icon {
-  color: var(--accent-pink);
-}
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.table th {
-  text-align: left;
-  padding: 0.5rem 0.625rem;
-  font-size: 0.6875rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--foreground-muted);
-  border-bottom: 1px solid var(--border);
-  background: var(--background-secondary);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.table th:first-child {
-  padding-left: 1rem;
-}
-
-.table th:last-child {
-  padding-right: 1rem;
-}
-
-.table td {
-  padding: 0.5rem 0.625rem;
-  font-size: 0.8125rem;
-  border-bottom: 1px solid var(--border);
-  transition: background 30ms ease;
-  vertical-align: middle;
-}
-
-.table td:first-child {
-  padding-left: 1rem;
-}
-
-.table td:last-child {
-  padding-right: 1rem;
-}
-
-/* Tabular numbers for numeric columns */
-.tabular-nums {
-  font-variant-numeric: tabular-nums;
-}
-
-.table tbody tr {
-  transition: background 30ms ease;
-}
-
-.table tbody tr:hover {
-  background: var(--background-hover);
-}
-
-.table tbody tr .row-actions {
-  opacity: 0;
-  transition: opacity 30ms ease;
-}
-
-.table tbody tr:hover .row-actions {
-  opacity: 1;
-}
-
-.file-row {
-  cursor: default;
-}
-
-.file-row.is-folder {
-  cursor: pointer;
-}
-
-.file-row.is-folder:hover .file-name {
-  color: var(--accent-pink);
-}
-
-.file-icon {
-  transition: color 50ms ease;
-}
-
-.file-chevron {
-  opacity: 0;
-  transform: translateX(-4px);
-  transition: all 50ms ease;
-}
-
-.file-row.is-folder:hover .file-chevron {
-  opacity: 1;
-  transform: translateX(0);
-}
-
+  Every offset here uses the independent `translate` property rather than
+  `transform`. These animations run on elements that are horizontally centred
+  with a -translate-x-1/2 utility, and `transform` inside a keyframe replaces
+  that transform outright, so the element would slide in from an off-centre
+  position and then snap once the animation ended. `translate` is an
+  independent property and composes with `transform` instead.
+*/
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        translate: -10px 0;
+    }
+
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        translate: 0 8px;
+    }
+
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
 }
 
 @keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+    from {
+        opacity: 0;
+        translate: 0 -8px;
+    }
 
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-@keyframes slideInLeft {
-  from { opacity: 0; transform: translateX(-8px); }
-  to { opacity: 1; transform: translateX(0); }
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
 }
 
 @keyframes slideInRight {
-  from { opacity: 0; transform: translateX(8px); }
-  to { opacity: 1; transform: translateX(0); }
-}
+    from {
+        opacity: 0;
+        translate: 8px 0;
+    }
 
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
 }
 
 @keyframes slideUpFade {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
+    from {
+        opacity: 0;
+        translate: 0 16px;
+    }
+
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
 }
 
-.animate-slide-up-fade {
-  animation: slideUpFade 300ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.animate-slideUp {
-  animation: slideUpFade 300ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes spin-once {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.animate-spin-once {
-  animation: spin-once 0.5s ease-in-out;
-}
-
-/* Logo spin on hover */
-.logo-spin {
-  transition: transform 0.4s ease;
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-}
-
-.logo-spin:hover {
-  animation: spin 2.5s linear infinite;
-}
-
-/* Theme-aware logo - inverts in dark mode, normal in light mode */
-.logo-themed {
-  filter: invert(1) !important;
-  image-rendering: -webkit-optimize-contrast;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-}
-
-.logo-themed:hover {
-  filter: invert(1) drop-shadow(0 0 4px rgba(255,255,255,0.25)) !important;
-}
-
-[data-theme="light"] .logo-themed {
-  filter: invert(0) !important;
-}
-
-[data-theme="light"] .logo-themed:hover {
-  filter: invert(0) drop-shadow(0 0 4px rgba(0,0,0,0.15)) !important;
-}
-
-.animate-fadeIn { animation: none; opacity: 1; }
-.animate-fadeInUp { animation: fadeInUp 300ms cubic-bezier(0.22, 1, 0.36, 1); }
-.animate-fadeInDown { animation: fadeInDown 300ms cubic-bezier(0.22, 1, 0.36, 1); }
-.animate-scaleIn { animation: scaleIn 320ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both; }
-.animate-slideInLeft { animation: slideInLeft 300ms cubic-bezier(0.22, 1, 0.36, 1); }
-.animate-slideInRight { animation: slideInRight 300ms cubic-bezier(0.22, 1, 0.36, 1); }
-.animate-spin { animation: spin 1s linear infinite; }
-
-.stagger-item {
-  opacity: 0;
-  animation: fadeInUp 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* Create bucket button - subtle glow on hover */
-.create-bucket-btn {
-  border-radius: 0.375rem;
-  cursor: pointer;
-}
-
-.create-bucket-btn:hover {
-  text-shadow: 0 0 8px var(--accent-pink);
-  filter: drop-shadow(0 0 3px var(--accent-pink));
-}
-
-.create-bucket-btn:focus-visible {
-  outline: 2px solid var(--accent-pink);
-  outline-offset: 2px;
-}
-
-.modal-backdrop {
-  background: var(--modal-backdrop-bg, rgba(0, 0, 0, 0.6));
-  backdrop-filter: blur(8px);
-  animation: none;
-  opacity: 1;
-  overscroll-behavior: contain;
-  touch-action: manipulation;
-}
-
-:root {
-  --modal-backdrop-bg: rgba(0, 0, 0, 0.6);
-  --command-palette-backdrop: rgba(0, 0, 0, 0.7);
-  --command-palette-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 100px rgba(192, 73, 255, 0.1);
-}
-
-[data-theme="light"] {
-  --modal-backdrop-bg: rgba(0, 0, 0, 0.4);
-  --command-palette-backdrop: rgba(0, 0, 0, 0.5);
-  --command-palette-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 25px 50px -12px rgba(0, 0, 0, 0.2), 0 0 60px rgba(124, 58, 237, 0.08);
-}
-
-@keyframes modalBackdropIn {
-  from {
-    opacity: 0;
-    backdrop-filter: blur(8px);
-  }
-  to {
-    opacity: 1;
-    backdrop-filter: blur(8px);
-  }
-}
-
-.modal-content {
-  animation: modalContentIn 320ms cubic-bezier(0.22, 1, 0.36, 1) 100ms both;
-}
-
-@keyframes modalContentIn {
-  from {
-    opacity: 0;
-    transform: scale(0.96) translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-/* Preview navigation arrows - consistent in both themes */
-.preview-nav-arrow {
-  width: 36px;
-  height: 36px;
-  border-radius: 9999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  cursor: pointer;
-  transition: background 100ms ease;
-  backdrop-filter: blur(8px);
-}
-
-.preview-nav-arrow:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-@media (min-width: 640px) {
-  .preview-nav-arrow {
-    width: 40px;
-    height: 40px;
-  }
-}
-
-[data-theme="light"] .preview-nav-arrow {
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(0, 0, 0, 0.15);
-}
-
-[data-theme="light"] .preview-nav-arrow:hover {
-  background: rgba(0, 0, 0, 0.65);
-}
-
-.context-menu {
-  animation: scaleIn 180ms cubic-bezier(0.16, 1, 0.3, 1);
-  transform-origin: top left;
-}
-
-.context-menu-item {
-  transition: background 30ms ease;
-}
-
-.progress-bar {
-  height: 4px;
-  background: var(--background-tertiary);
-  border-radius: 9999px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent-purple), var(--accent-pink));
-  border-radius: 9999px;
-  transition: width 100ms ease;
-}
-
-.skeleton {
-  background: linear-gradient(90deg, var(--background-tertiary) 25%, var(--background-hover) 50%, var(--background-tertiary) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease infinite;
-  border-radius: 0.25rem;
-}
-
-.empty-state {
-  animation: fadeInUp 300ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.empty-state-icon {
-  animation: fadeInUp 150ms ease 50ms both;
-}
-
-/* Prevent layout shift during loading */
-.content-stable {
-  min-height: 200px;
-}
-
-/* Sidebar stable layout - use contain only when not transitioning width */
-aside {
-  contain: style;
-}
-
-/* Ensure header doesn't shift */
-header {
-  contain: layout;
-}
-
-.toast {
-  animation: slideInRight 100ms ease;
-}
-
-/* Command Palette Styles */
-.command-palette-backdrop {
-  background: var(--command-palette-backdrop, rgba(0, 0, 0, 0.7));
-  backdrop-filter: blur(8px);
-  animation: none;
-  opacity: 1;
-}
-
-.command-palette-content {
-  animation: commandPaletteIn 300ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
-  box-shadow: var(--command-palette-shadow,
-    0 0 0 1px rgba(255, 255, 255, 0.05),
-    0 25px 50px -12px rgba(0, 0, 0, 0.5),
-    0 0 100px rgba(192, 73, 255, 0.1));
-}
-
-@keyframes commandPaletteIn {
-  from {
-    opacity: 0;
-    transform: scale(0.97) translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-/* Railway-style glass morphism */
-.glass {
-  background: rgba(15, 10, 26, 0.8);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-/* Bento grid styles */
-.bento-grid {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-}
-
-.bento-item {
-  background: var(--background-secondary);
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  padding: 1.25rem;
-  transition: all 75ms ease;
-}
-
-.bento-item:hover {
-  border-color: var(--border-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-}
-
-/* Railway gradient border effect */
-.gradient-border {
-  position: relative;
-}
-
-.gradient-border::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  padding: 1px;
-  border-radius: inherit;
-  background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 75ms ease;
-}
-
-.gradient-border:hover::before {
-  opacity: 1;
-}
-
-/* Kbd styles for keyboard shortcuts */
-kbd {
-  font-family: inherit;
-}
-
-/* Clean focus states - only for non-input elements */
-button:focus-visible,
-a:focus-visible {
-  outline: 2px solid var(--accent-pink);
-  outline-offset: 2px;
-}
-
-/* Input elements already have their own focus styles */
-input:focus-visible,
-textarea:focus-visible {
-  outline: none;
-}
-
-/* Safe area for notched phones */
-.safe-area-inset {
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-.pb-safe {
-  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
-}
-
-/* Lifts fixed bottom elements (toasts, batch bar, offline pill) above the home
-   indicator. viewport-fit=cover extends the page beneath it, so their bottom-*
-   offset alone would leave them partly covered on notched phones. */
-.mb-safe {
-  margin-bottom: env(safe-area-inset-bottom);
-}
-
-/* Mobile-first touch targets */
-@media (max-width: 640px) {
-  /* Bottom-sheet modals sit flush with the screen edge */
-  .modal-content {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-
-  .table td {
-    padding: 0.5rem 0.625rem;
-  }
-
-  .table th {
-    padding: 0.5rem 0.625rem;
-    font-size: 0.65rem;
-  }
-
-  .sidebar-item {
-    min-height: 22px;
-    padding: 0.25rem 0.625rem;
-  }
-
-  .context-menu-item {
-    min-height: 40px;
-    padding: 0.625rem 0.875rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .sidebar {
-    position: fixed;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    z-index: 50;
-    transform: translateX(-100%);
-    transition: transform 100ms ease;
-  }
-
-  .sidebar.open {
-    transform: translateX(0);
-  }
-
-  .sidebar-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 40;
-  }
-
-  .btn {
-    font-size: 0.75rem;
-  }
-
-  .btn span.hidden {
-    display: none !important;
-  }
-
-  /* Row actions always visible on mobile */
-  .table tbody tr .row-actions {
-    opacity: 1;
-  }
-}
-
-@media (max-width: 480px) {
-  .header-breadcrumb {
-    max-width: 100px;
-  }
-
-  /* Even smaller font on very small screens */
-  .btn {
-    font-size: 0.75rem;
-  }
-
-  .input {
-    font-size: 16px; /* Prevent zoom on iOS */
-  }
-
-  select.input {
-    font-size: 16px; /* Prevent zoom on iOS */
-  }
+@keyframes logoSpin {
+    from {
+        rotate: 0deg;
+    }
+
+    to {
+        rotate: 360deg;
+    }
 }

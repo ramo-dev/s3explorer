@@ -8,15 +8,22 @@ interface EmptyStateProps {
 export function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
     return (
         <div
-            className="flex flex-col items-center justify-center h-full py-16 text-center empty-state px-4"
+            className="flex h-full flex-col items-center justify-center px-4 py-16 text-center animate-fade-in-up"
             role="status"
             aria-label={title}
         >
-            <div className="w-12 h-12 rounded-lg bg-background-tertiary flex items-center justify-center mb-3 empty-state-icon border border-border" aria-hidden="true">
-                <Icon className="w-6 h-6 text-foreground-muted" />
+            {/* Icon runs a shorter, delayed variant of the same entrance so it
+                lands after the container rather than with it. `both` fill mode
+                matters here: without it the icon is visible for the 50ms delay
+                at full opacity and the stagger reads as a flicker. */}
+            <div
+                className="mb-3 flex size-12 items-center justify-center rounded-lg border border-border bg-muted animate-[fadeInUp_150ms_ease_50ms_both]"
+                aria-hidden="true"
+            >
+                <Icon className="size-6 text-muted-foreground" />
             </div>
-            <h3 className="text-sm font-medium mb-1">{title}</h3>
-            <p className="text-xs text-foreground-muted max-w-[220px]">{description}</p>
+            <h3 className="mb-1 text-sm font-medium">{title}</h3>
+            <p className="max-w-[220px] text-xs text-muted-foreground">{description}</p>
             {action && <div className="flex justify-center w-full">{action}</div>}
         </div>
     );
