@@ -102,10 +102,18 @@ export function Sidebar({
         <>
             {/* Header */}
             <div className="h-12 flex items-center justify-between pl-3.5 pr-1.5 border-b border-border shrink-0">
-                <div className="flex items-center gap-2 cursor-pointer group transition-all duration-300 hover:opacity-80" onClick={onNavigateHome} role="button" tabIndex={collapsed ? -1 : 0} onKeyDown={(e) => e.key === 'Enter' && onNavigateHome()}>
-                    <img src="/logo.svg" alt="S3 Explorer logo" className="w-6 h-6 logo-spin logo-themed" />
-                    <span className="font-semibold text-sm whitespace-nowrap">S3 Explorer</span>
-                </div>
+                {/* A real <button>, not a div with role="button": as a div the
+                    keydown handler only fired on Enter, so the control was
+                    unreachable with Space. */}
+                <button
+                    type="button"
+                    onClick={onNavigateHome}
+                    tabIndex={collapsed ? -1 : 0}
+                    className="group flex cursor-pointer items-center gap-2 transition-all duration-300 hover:opacity-80"
+                >
+                    <img src="/logo.svg" alt="S3 Explorer logo" className="size-6 logo-spin logo-themed" />
+                    <span className="whitespace-nowrap text-sm font-semibold">S3 Explorer</span>
+                </button>
                 <div className="flex items-center">
                     <Button onClick={onToggleTheme} variant="ghost" size="icon-sm" className="text-muted-foreground" tabIndex={collapsed ? -1 : 0} aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}>
                         {theme === 'dark' ? <Sun /> : <Moon />}
@@ -147,9 +155,11 @@ export function Sidebar({
                 )}
             </div>
 
-            {/* Buckets list */}
-            <div className="flex-1 overflow-y-auto px-2.5 min-h-0 bucket-scrollable" role="list" aria-labelledby={`${idPrefix}-buckets-heading`}>
-                <ul className="list-none space-y-px">
+            {/* The scroll container is a plain div and the list is a real <ul>.
+                role="list" on the wrapper would instead make the <ul> an
+                unlabelled nested list with no listitem between the two. */}
+            <div className="flex-1 overflow-y-auto px-2.5 min-h-0 bucket-scrollable">
+                <ul className="list-none space-y-px" aria-labelledby={`${idPrefix}-buckets-heading`}>
                     {filteredBuckets.map((bucket, i) => (
                         // The row is a plain container so the copy and delete buttons
                         // are siblings of the select button rather than nested inside

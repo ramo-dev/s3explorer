@@ -155,20 +155,28 @@ const stripNonCode = (src) =>
 // Per-file call-site count for a declared utility, using the same stripped
 // source the legacy scan uses so a name mentioned only in a comment or an
 // import path is not counted as a caller.
-const utilityUse = (file, name) => {
+const utilityUse = (name) => {
   const re = new RegExp(
     `(?:^|[\\s"'\`])(?:[a-z0-9-]+:)*${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?=[\\s"'\`]|$)`,
     "gm",
   );
-  return [...stripNonCode(fs.readFileSync(file, "utf8")).matchAll(re)].length;
+  return sources.reduce(
+    (n, src) => n + [...src.matchAll(re)].length,
+    0,
+  );
 };
 
 const rows = [];
 let totalClasses = 0;
 let totalTokens = 0;
 
-for (const file of files) {
-  const src = stripNonCode(fs.readFileSync(file, "utf8"));
+// Read and strip every file once, up front. The declared-utility call-site
+// counts below re-scan the same sources, and re-reading per utility meant
+// utilities x files disk reads for no reason.
+const sources = files.map((f) => stripNonCode(fs.readFileSync(f, "utf8")));
+
+for (const [i, file] of files.entries()) {
+  const src = sources[i];
   const allClasses = CLASS_RE
     ? [...src.matchAll(CLASS_RE)].map((m) => m[1])
     : [];
@@ -263,7 +271,7 @@ console.log(
 // for class selectors.
 if (declaredUtilities.size) {
   const counts = [...declaredUtilities]
-    .map((u) => [u, files.filter((f) => utilityUse(f, u)).length])
+    .map((u) => [u, utilityUse(u)])
     .sort((a, b) => a[0].localeCompare(b[0]));
   const orphans = counts.filter(([, n]) => n === 0).map(([u]) => u);
   console.log(
