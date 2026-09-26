@@ -12,11 +12,12 @@ s3explorer/
   apps/
     client/          # React frontend (Vite + Tailwind)
       src/
-        api.ts       # API client, error handling, request cancellation
-        App.tsx      # Root component, auth flow, state management
-        components/  # UI components
-        hooks/       # useDebounce, useNetworkStatus
-        utils/       # Formatting, validation, file helpers
+        api/         # Transport modules and query hooks
+        App.tsx      # Router/provider entry point
+        app/         # Router, guards, paths, query client
+        components/  # UI primitives, layouts, pages, shared components
+        hooks/       # Cross-page hooks
+        lib/         # Formatting, validation, file helpers
         types/       # TypeScript interfaces
         constants/   # Timeouts, pagination, storage keys
     server/          # Express backend (TypeScript)

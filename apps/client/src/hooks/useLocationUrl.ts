@@ -1,91 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { STORAGE_KEYS } from '../constants';
-import {
-    EMPTY_FILTERS,
-    type FileFilters,
-    parseFilterParams,
-    writeFilterParams,
-} from '../utils/fileFilters';
+import { buildLocationUrl, parseLocationUrl, type LocationUrl, type ViewMode } from '../app/paths';
+import type { FileFilters } from '../lib/fileFilters';
 
-export type ViewMode = 'list' | 'grid';
-
-/** Everything the URL carries about where the user is. */
-export interface LocationUrl {
-    /** null means no bucket selected, which is the app's root. */
-    bucket: string | null;
-    /** S3 prefix. Either '' (bucket root) or ends with '/'. */
-    path: string;
-    /** null when absent from the URL, meaning "use the stored preference". */
-    view: ViewMode | null;
-    search: string;
-    filters: FileFilters;
-}
-
-const ROOT = '/';
-const BUCKET_PREFIX = '/b/';
-
-const EMPTY: LocationUrl = { bucket: null, path: '', view: null, search: '', filters: EMPTY_FILTERS };
-
-/**
- * Reads location state out of a URL.
- *
- * The app had no router, so the address bar was frozen at "/" and navigation
- * was stashed in `history.state` -- which is in-memory only and does not
- * survive a reload. That is why a refresh dropped the user back at the root.
- * The location has to live in the URL itself to be shareable and reloadable.
- *
- * Shape: /b/<bucket>/<folder/...>?view=grid&q=<search>&type=image&after=30d&size=10to100mb
- *
- * Path segments are individually percent-encoded. S3 keys routinely contain
- * spaces, '#', '?' and non-ASCII, and encoding the whole path in one go would
- * escape the separators that make it a path.
- */
-export function parseLocationUrl(href?: string): LocationUrl {
-    const url = new URL(href ?? window.location.href);
-
-    if (!url.pathname.startsWith(BUCKET_PREFIX)) {
-        // Not a location URL at all (the login screen, a stale bookmark, a
-        // stray path). Stay at the root rather than guessing.
-        return { ...EMPTY };
-    }
-
-    const segments = url.pathname
-        .slice(BUCKET_PREFIX.length)
-        .split('/')
-        .filter(Boolean)
-        .map(decodeURIComponent);
-
-    const [bucket, ...folders] = segments;
-    if (!bucket) return { ...EMPTY };
-
-    const params = url.searchParams;
-    const view = params.get('view');
-
-    return {
-        bucket,
-        // A path always ends in '/' except at the bucket root, matching the
-        // CommonPrefix values S3 returns and the rest of the app expects.
-        path: folders.length ? `${folders.join('/')}/` : '',
-        view: view === 'grid' || view === 'list' ? view : null,
-        search: params.get('q') ?? '',
-        filters: parseFilterParams(params),
-    };
-}
-
-/** Serialises location state back to a URL. Inverse of parseLocationUrl. */
-export function buildLocationUrl(loc: LocationUrl): string {
-    if (!loc.bucket) return ROOT;
-
-    const segments = [loc.bucket, ...loc.path.split('/').filter(Boolean)].map(encodeURIComponent);
-    const params = new URLSearchParams();
-    // Only non-defaults are written, so the common case stays a clean path.
-    if (loc.view === 'grid') params.set('view', 'grid');
-    if (loc.search) params.set('q', loc.search);
-    writeFilterParams(params, loc.filters);
-
-    const query = params.toString();
-    return `${BUCKET_PREFIX}${segments.join('/')}${query ? `?${query}` : ''}`;
-}
+export { buildLocationUrl, parseLocationUrl } from '../app/paths';
+export type { LocationUrl, ViewMode } from '../app/paths';
 
 const readStoredView = (): ViewMode => (localStorage.getItem(STORAGE_KEYS.VIEW_MODE) === 'grid' ? 'grid' : 'list');
 
@@ -179,5 +98,11 @@ export function useUrlLocation() {
         setSearch,
         setFilters,
         navigateTo,
+        // Stable semantic aliases used by route-facing components. Keep the
+        // lower-level setters above for existing callers during migration.
+        setSelectedBucket: setBucket,
+        setCurrentPath: setPath,
+        setViewMode: setView,
+        setSearchQuery: setSearch,
     };
 }

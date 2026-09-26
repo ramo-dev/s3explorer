@@ -10,7 +10,7 @@ import {
   isFiltersActive,
   matchesFilters,
   parseISODate,
-} from '../src/utils/fileFilters';
+} from '../src/lib/fileFilters';
 
 let failures = 0;
 const check = (label: string, actual: unknown, expected: unknown) => {

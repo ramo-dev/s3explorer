@@ -43,3 +43,6 @@ apps/server/data/
 *.db-shm
 *.db-wal
 encryption.key
+
+AGENTS.md
+MIGRATION_PLAN.md

@@ -2,40 +2,11 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/*
-  Both fonts are bundled rather than fetched. @fontsource-variable/outfit
-  registers the family as "Outfit Variable" and @fontsource-variable/
-  jetbrains-mono as "JetBrains Mono Variable" -- neither is the name Google
-  Fonts uses for the same typefaces, which is why the values below quote the
-  fontsource names. Bundling them keeps the app off Google's CDN entirely, so
-  the server's CSP needs no font host allowlist.
-*/
 @import "@fontsource-variable/outfit";
 @import "@fontsource-variable/jetbrains-mono";
 
-/*
-  The app themes on [data-theme] rather than Tailwind's default .dark, so the
-  stock variant is redefined. Both selectors are listed so a bare .dark class
-  also works, which is what the shadcn primitives assume and what makes a
-  future move to a .class-based theming library a one-line change.
-
-  The app itself uses no dark: utilities -- it swaps the token values in the
-  palette blocks below -- so this variant is purely additive for the
-  primitives, which do use it.
-*/
 @custom-variant dark (&:is(.dark *, [data-theme="dark"] *));
 
-/*
-  Colours are declared `inline` so the generated utilities reference the custom
-  properties directly instead of baking in a resolved value. That is what lets
-  the app switch theme at runtime by setting `data-theme` on <html> -- the
-  utilities below resolve to whichever block is currently active.
-
-  The v3 config defined these through a `token()` helper that faked opacity
-  support with `rgb(from var(--x) r g b / <alpha-value>)`, because v3 can't
-  derive an alpha from an opaque var(). v4 does that natively via color-mix(),
-  so the helper is gone and these are plain references.
-*/
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
@@ -70,26 +41,12 @@
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
 
-    /*
-    shadcn has no success colour, but the app needs one: the "Active" badge on
-    a connection, the tick on a valid password requirement, and success toasts.
-    Declaring it here rather than reviving the old --accent-green keeps it
-    themeable from one place like every other colour.
-  */
     --color-success: var(--success);
 
     --font-sans: var(--font-sans);
     --font-mono: var(--font-mono);
     --font-serif: var(--font-serif);
 
-    /*
-    The shadcn preset derives these from --radius (0.625rem) but only shifts
-    it for sm, leaving --radius-lg pinned at 0.5rem -- i.e. smaller than md, so
-    rounded-lg would render tighter than rounded-md. Offsets are applied on
-    both sides instead, keeping the scale monotonic:
-
-      sm 0.5rem < md 0.625rem < lg 0.75rem < xl 0.875rem < 2xl 1.125rem
-  */
     --radius-sm: calc(var(--radius) - 2px);
     --radius-md: var(--radius);
     --radius-lg: calc(var(--radius) + 2px);
@@ -116,16 +73,6 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/*
-  App-specific animations. Fonts, radii, colours and shadows are all declared
-  in the palette blocks below, so they are intentionally absent here.
-
-  The @keyframes themselves live at the bottom of this file, outside @theme.
-  Keyframes nested in @theme are emitted only when the matching --animate-*
-  utility is used, and two of them below are also referenced by custom utility
-  declarations that Tailwind cannot see a dependency from. Top-level keyframes
-  are always emitted verbatim, so the reference here is one-directional and safe.
-*/
 @theme {
     --animate-fade-in: fadeIn 200ms ease;
     --animate-slide-in: slideIn 200ms ease;
@@ -135,10 +82,6 @@
     --animate-slide-up-fade: slideUpFade 300ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/*
-  Light palette. index.html ships data-theme="dark" by default, so this block
-  is the fallback for the rare case the attribute is absent.
-*/
 :root {
     color-scheme: light;
     --background: oklch(1 0 0);
@@ -196,15 +139,6 @@
     --success: #16a34a;
 }
 
-/*
-  Dark palette -- the app's default, set as data-theme="dark" in index.html.
-
-  The shadcn preset appends its own dark block at the end of this file. Rather
-  than leave two rules matching the same attribute where whichever happens to
-  come last silently wins, the preset's values were folded in here. `.dark` is
-  listed alongside the attribute so a class-based theme would also work; the app
-  never sets it.
-*/
 .dark,
 [data-theme="dark"] {
     color-scheme: dark;
@@ -265,11 +199,6 @@
 
 @layer base {
 
-    /*
-    v4 changed the default border colour to `currentcolor`. Restoring the
-    themed default means a bare `border` picks up --border again, as it did
-    under the v3 palette.
-  */
     *,
     ::after,
     ::before,
@@ -282,7 +211,6 @@
         @apply font-sans;
         min-height: 100%;
         background: var(--background);
-        /* High-quality text rendering for all screens. */
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         text-rendering: optimizeLegibility;
@@ -310,11 +238,6 @@
         -webkit-tap-highlight-color: transparent;
     }
 
-    /*
-    Scrollbars are hidden by default but scrolling still works, so panels do
-    not sprout a permanent gutter they were not designed around. Anything that
-    genuinely needs a visible scrollbar opts back in with `bucket-scrollable`.
-  */
     * {
         scrollbar-width: none;
         -ms-overflow-style: none;
@@ -328,14 +251,6 @@
         font-family: inherit;
     }
 
-    /*
-    Focus indicators. This lives in the base layer, which is deliberate: the
-    shadcn primitives carry their own focus-visible:ring *and* outline-none,
-    and because a utility outranks the base layer that outline-none wins. So
-    this rule styles exactly the controls that have no focus ring of their own
-    -- the raw buttons in BatchActionsBar, the breadcrumb triggers, the
-    connection rows -- and never doubles up on a primitive that already has one.
-  */
     button:focus-visible,
     a:focus-visible {
         outline: 2px solid var(--ring);
@@ -347,11 +262,6 @@
         outline: none;
     }
 
-    /*
-    Layout containment on the two chrome regions. Isolates their internal
-    layout so scrolling a long file list does not recalculate the sidebar or
-    header, and keeps a reflow in one from forcing a paint in the other.
-  */
     aside {
         contain: style;
     }
@@ -361,7 +271,6 @@
     }
 }
 
-/* Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
 
     *,
@@ -373,7 +282,6 @@
     }
 }
 
-/* Crisp rendering on high-DPI displays */
 @media (-webkit-min-device-pixel-ratio: 2),
 (min-resolution: 192dpi) {
     html {
@@ -381,15 +289,6 @@
     }
 }
 
-/*
-  The handful of utilities that cannot be expressed as one line of Tailwind
-  classes. Everything else in the app is a utility or a shadcn primitive.
-*/
-
-/*
-  The bucket list is long enough to need a scrollbar, and hiding it there makes
-  the list look truncated with no affordance for the rows below the fold.
-*/
 @utility bucket-scrollable {
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
@@ -413,23 +312,11 @@
     }
 }
 
-/*
-  Staggered entrance for list rows, driven by an inline animation-delay per
-  row. Kept as a utility rather than spelled out at each call site: the opacity
-  floor plus `forwards` is what leaves the element visible after the animation,
-  and dropping either is a silent bug that renders the row invisible forever.
-*/
 @utility stagger-item {
     opacity: 0;
     animation: fadeInUp 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/*
-  The logo is a single dark artwork used on both a white and a near-black
-  background, so it is inverted for dark mode. filter is the only lever that
-  works on an <img> without shipping a second asset, and the two drop-shadows
-  keep the mark from disappearing into the surface it sits on.
-*/
 @utility logo-themed {
     filter: invert(1) !important;
     image-rendering: -webkit-optimize-contrast;
@@ -459,10 +346,6 @@
     }
 }
 
-/*
-  Create-bucket gets a glow on hover to mark it as the one action in the
-  sidebar header. Only the glow lives here; the box comes from Button.
-*/
 @utility create-bucket-btn {
     &:hover {
         text-shadow: 0 0 8px var(--primary);
@@ -475,11 +358,6 @@
     }
 }
 
-/*
-  Lifts fixed bottom elements (toasts, batch bar, offline pill) above the home
-  indicator. viewport-fit=cover extends the page beneath it, so their bottom-*
-  offset alone would leave them partly covered on notched phones.
-*/
 @utility mb-safe {
     margin-bottom: env(safe-area-inset-bottom);
 }
@@ -488,16 +366,6 @@
     padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
 }
 
-/*
-  Keyframes for the --animate-* entries above.
-
-  Every offset here uses the independent `translate` property rather than
-  `transform`. These animations run on elements that are horizontally centred
-  with a -translate-x-1/2 utility, and `transform` inside a keyframe replaces
-  that transform outright, so the element would slide in from an off-centre
-  position and then snap once the animation ended. `translate` is an
-  independent property and composes with `transform` instead.
-*/
 @keyframes fadeIn {
     from {
         opacity: 0;
