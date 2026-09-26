@@ -156,11 +156,11 @@ export function FilterBar({
                     }
                 />
                 <DropdownMenuContent align="start" className="w-48">
-                    <DropdownMenuLabel>Type</DropdownMenuLabel>
                     <DropdownMenuRadioGroup
                         value={filters.type}
                         onValueChange={value => set('type', value as TypeFilter)}
                     >
+                        <DropdownMenuLabel>Type</DropdownMenuLabel>
                         {TYPE_OPTIONS.map(option => (
                             <DropdownMenuRadioItem key={option.value} value={option.value}>
                                 {option.value === 'all' ? (
@@ -269,11 +269,11 @@ export function FilterBar({
                     }
                 />
                 <DropdownMenuContent align="start" className="w-52">
-                    <DropdownMenuLabel>Size</DropdownMenuLabel>
                     <DropdownMenuRadioGroup
                         value={filters.size}
                         onValueChange={value => set('size', value as FileFilters['size'])}
                     >
+                        <DropdownMenuLabel>Size</DropdownMenuLabel>
                         {SIZE_OPTIONS.map(option => (
                             <DropdownMenuRadioItem key={option.value} value={option.value}>
                                 {option.label}
@@ -286,7 +286,6 @@ export function FilterBar({
                     {/* Direction is not a filter, it is a read order, so it
                         drives the same sort state the column headers do rather
                         than inventing a second one that could disagree. */}
-                    <DropdownMenuLabel>Order</DropdownMenuLabel>
                     <DropdownMenuRadioGroup
                         value={sizeOrder}
                         onValueChange={value => {
@@ -294,6 +293,7 @@ export function FilterBar({
                             onSort('size', value as SortDirection);
                         }}
                     >
+                        <DropdownMenuLabel>Order</DropdownMenuLabel>
                         <DropdownMenuRadioItem value="none">Unsorted</DropdownMenuRadioItem>
                         <DropdownMenuRadioItem value="asc">
                             <ArrowUp className="size-3.5" aria-hidden="true" />
