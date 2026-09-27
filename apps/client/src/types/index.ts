@@ -15,6 +15,21 @@ export interface ToastState {
   type: 'success' | 'error';
 }
 
+export interface UploadJobSummary {
+  id: string;
+  bucket: string;
+  prefix: string;
+  totalFiles: number;
+  completedFiles: number;
+  failedFiles: number;
+  activeFiles: number;
+  totalBytes: number;
+  completedBytes: number;
+  status: 'active' | 'complete' | 'failed';
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface ContextMenuState {
   x: number;
   y: number;

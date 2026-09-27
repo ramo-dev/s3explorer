@@ -6,6 +6,7 @@ import { listBuckets } from '@/api/buckets';
 import { useObjectListing, useObjectSearch } from '@/api/queries';
 import { useUrlLocation } from '@/hooks/useLocationUrl';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { useUploadJobs } from '@/hooks/useUploadJobs';
 import type { Bucket, S3Object, SortDirection, SortField, ToastState } from '@/types';
 import { useSelection } from './hooks/useSelection';
 import { useViewPrefs } from './hooks/useViewPrefs';
@@ -48,6 +49,7 @@ export default function FilesPage() {
   } = useUrlLocation();
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const uploadJobs = useUploadJobs(authenticated === true);
   const [preparingZip, setPreparingZip] = useState(false);
   const [toast, setToast] = useState<ToastState | null>(null);
   const { sidebarOpen, setSidebarOpen, sidebarCollapsed, setSidebarCollapsed, theme, toggleTheme } = useViewPrefs();
@@ -241,6 +243,7 @@ export default function FilesPage() {
     activeConnection={activeConnection} buckets={buckets} selectedBucket={selectedBucket} currentPath={currentPath}
     searchQuery={searchQuery} loading={loading} sidebarOpen={sidebarOpen} sidebarCollapsed={sidebarCollapsed}
     theme={theme} toast={toast} error={error} uploading={uploading} uploadProgress={uploadProgress}
+    uploadJobs={uploadJobs}
     isDragActive={isDragActive} networkStatus={networkStatus} filters={filters} viewMode={viewMode}
     selectedKeys={selectedKeys} displayObjects={displayObjects} sourceObjects={sourceObjects} searchResults={searchResults}
     searching={searching} sortField={sortField} sortDirection={sortDirection} hasMore={hasMore} loadingMore={loadingMore}

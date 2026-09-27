@@ -17,7 +17,7 @@ function sanitizeSegment(segment: string): string {
   return segment.replace(/[<>:"|?*\x00-\x1f]/g, '_');
 }
 
-function safeRelativePath(input: string): string | null {
+export function safeRelativePath(input: string): string | null {
   const normalized = path.posix.normalize(input.replaceAll('\\', '/')).replace(/^\.\//, '');
   if (!normalized || normalized === '.' || normalized.startsWith('/') || normalized === '..' || normalized.startsWith('../')) {
     return null;

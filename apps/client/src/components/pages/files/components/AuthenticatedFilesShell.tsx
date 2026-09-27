@@ -9,7 +9,7 @@ import { DashboardSidebar } from '@/components/layout/dashboard/DashboardSidebar
 import { Toast } from '@/components/shared/Toast';
 import { UploadProgress } from './UploadProgress';
 import { BatchActionsBar } from './BatchActionsBar';
-import type { Bucket, ContextMenuState, S3Object, SortDirection, SortField, ToastState } from '@/types';
+import type { Bucket, ContextMenuState, S3Object, SortDirection, SortField, ToastState, UploadJobSummary } from '@/types';
 import type { FileFilters } from '@/lib/fileFilters';
 import type { Connection } from '@/api';
 import { getFileName } from '@/lib/fileUtils';
@@ -31,6 +31,7 @@ interface AuthenticatedFilesShellProps {
   error: string | null;
   uploading: boolean;
   uploadProgress: number;
+  uploadJobs: UploadJobSummary[];
   isDragActive: boolean;
   networkStatus: { isOnline: boolean; isBackendReachable: boolean };
   filters: FileFilters;
@@ -121,7 +122,7 @@ interface AuthenticatedFilesShellProps {
 
 export function AuthenticatedFilesShell({
   activeConnection, buckets, selectedBucket, currentPath, searchQuery, loading, sidebarOpen, sidebarCollapsed,
-  theme, toast, error, uploading, uploadProgress, isDragActive, networkStatus, filters, viewMode, selectedKeys,
+  theme, toast, error, uploading, uploadProgress, uploadJobs, isDragActive, networkStatus, filters, viewMode, selectedKeys,
   displayObjects, sourceObjects, searchResults, searching, sortField, sortDirection, hasMore, loadingMore,
   breadcrumbs, contextMenu, showNewBucket, showNewFolder, showRename, showDelete, showDeleteBucket,
   showConnectionManager, showCommandPalette, newName, previewObject, batchPreviewObjects, batchPreviewStartIndex,
@@ -158,7 +159,7 @@ export function AuthenticatedFilesShell({
           onNavigateToBreadcrumb={i => onSetCurrentPath(breadcrumbs.slice(0, i + 1).join('/') + '/')}
           onRefresh={onRefresh} onNewFolder={onNewFolder} onUpload={onDrop} onUploadFolder={onUploadFolder} onOpenCommandPalette={onOpenCommandPalette} />
         <ErrorBanner error={error} onDismiss={() => onSetError(null)} />
-        <UploadProgress uploading={uploading} progress={uploadProgress} />
+        <UploadProgress uploading={uploading} progress={uploadProgress} jobs={uploadJobs} />
         <DropOverlay isDragActive={isDragActive} />
         <FilesMainContent activeConnection={!!activeConnection} selectedBucket={selectedBucket} searching={searching}
           searchActive={!!searchResults} displayObjects={displayObjects} sourceObjects={sourceObjects} loading={loading}

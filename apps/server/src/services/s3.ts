@@ -19,6 +19,7 @@ import fs from 'fs';
 import type { BucketInfo, ObjectInfo, ObjectMetadata } from '../types/index.js';
 import { unpackAndDecrypt } from './crypto.js';
 import { connections } from './db.js';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 export type { BucketInfo, ObjectInfo, ObjectMetadata };
 
@@ -79,6 +80,31 @@ function getS3Client(configOverride?: S3ConnectionConfig): S3Client {
     requestChecksumCalculation: 'WHEN_REQUIRED',
     responseChecksumValidation: 'WHEN_REQUIRED',
   });
+}
+
+export async function initiateMultipartUpload(bucket: string, key: string, contentType?: string): Promise<string> {
+  const response = await getS3Client().send(new CreateMultipartUploadCommand({
+    Bucket: bucket, Key: key, ContentType: contentType,
+  }));
+  if (!response.UploadId) throw new Error('Failed to initiate multipart upload');
+  return response.UploadId;
+}
+
+export async function signMultipartPart(bucket: string, key: string, uploadId: string, partNumber: number): Promise<string> {
+  return getSignedUrl(getS3Client(), new UploadPartCommand({
+    Bucket: bucket, Key: key, UploadId: uploadId, PartNumber: partNumber,
+  }), { expiresIn: 15 * 60 });
+}
+
+export async function completeMultipartUpload(bucket: string, key: string, uploadId: string, parts: Array<{ PartNumber: number; ETag: string }>): Promise<void> {
+  await getS3Client().send(new CompleteMultipartUploadCommand({
+    Bucket: bucket, Key: key, UploadId: uploadId,
+    MultipartUpload: { Parts: parts.sort((a, b) => a.PartNumber - b.PartNumber) },
+  }));
+}
+
+export async function abortMultipartUpload(bucket: string, key: string, uploadId: string): Promise<void> {
+  await getS3Client().send(new AbortMultipartUploadCommand({ Bucket: bucket, Key: key, UploadId: uploadId }));
 }
 
 export async function listBuckets(config?: S3ConnectionConfig): Promise<BucketInfo[]> {

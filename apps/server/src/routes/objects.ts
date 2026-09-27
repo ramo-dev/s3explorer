@@ -4,6 +4,8 @@ import multer from 'multer';
 import * as s3 from '../services/s3.js';
 import * as zip from '../services/zip.js';
 import { uploadParts } from '../services/upload.js';
+import * as uploadJobs from '../services/upload-jobs.js';
+import * as multipart from '../services/multipart-upload.js';
 import { assertBucketAllowed } from '../utils/pinnedBucket.js';
 import { isValidBucketName } from '../utils/validation.js';
 
@@ -21,6 +23,55 @@ if (!fs.existsSync(UPLOAD_TEMP_DIR)) {
 const upload = multer({
   dest: UPLOAD_TEMP_DIR,
   limits: { fileSize: MAX_FILE_SIZE }
+});
+
+router.get('/uploads/jobs', async (_req: Request, res: Response) => {
+  res.json({ jobs: uploadJobs.listUploadJobs() });
+});
+
+router.post('/multipart/initiate', async (req: Request, res: Response) => {
+  try {
+    const { bucket, key, size, contentType, jobId, fileIndex } = req.body;
+    if (!isValidBucketName(bucket) || typeof key !== 'string' || !isValidObjectKey(key) || key.includes('../')) {
+      return res.status(400).json({ error: 'Invalid multipart upload' });
+    }
+    assertBucketAllowed(bucket);
+    if (!Number.isSafeInteger(size) || size <= 0) return res.status(400).json({ error: 'Invalid file size' });
+    const session = await multipart.create(bucket, key, size, typeof contentType === 'string' ? contentType : undefined, jobId, fileIndex);
+    res.json({ sessionId: session.id, partSize: session.partSize, totalParts: session.totalParts });
+  } catch (error: any) {
+    const { message, s3Code, status } = getS3ErrorDetails(error);
+    res.status(status).json({ error: message, s3Code });
+  }
+});
+
+router.post('/multipart/:sessionId/parts/:partNumber/url', async (req: Request, res: Response) => {
+  try {
+    res.json(await multipart.signPart(req.params.sessionId, Number.parseInt(req.params.partNumber, 10)));
+  } catch (error: any) {
+    const { message, s3Code, status } = getS3ErrorDetails(error);
+    res.status(status === 500 ? 400 : status).json({ error: message, s3Code });
+  }
+});
+
+router.post('/multipart/:sessionId/complete', async (req: Request, res: Response) => {
+  try {
+    const parts = Array.isArray(req.body.parts) ? req.body.parts : [];
+    res.json(await multipart.complete(req.params.sessionId, parts));
+  } catch (error: any) {
+    const { message, s3Code, status } = getS3ErrorDetails(error);
+    res.status(status === 500 ? 400 : status).json({ error: message, s3Code });
+  }
+});
+
+router.delete('/multipart/:sessionId', async (req: Request, res: Response) => {
+  try {
+    await multipart.abort(req.params.sessionId);
+    res.json({ success: true });
+  } catch (error: any) {
+    const { message, s3Code, status } = getS3ErrorDetails(error);
+    res.status(status === 500 ? 400 : status).json({ error: message, s3Code });
+  }
 });
 
 // Validate object key -- the ../ check blocks path traversal attacks that could
@@ -226,6 +277,39 @@ router.get('/:bucket/metadata', async (req: Request, res: Response) => {
   }
 });
 
+router.post('/:bucket/upload/jobs', async (req: Request, res: Response) => {
+  try {
+    const { bucket } = req.params;
+    const prefix = typeof req.body.prefix === 'string' ? req.body.prefix : '';
+    const files = Array.isArray(req.body.files) ? req.body.files : [];
+    if (!isValidBucketName(bucket)) return res.status(400).json({ error: 'Invalid bucket name' });
+    assertBucketAllowed(bucket);
+    if (prefix.includes('../') || files.length === 0) return res.status(400).json({ error: 'Invalid upload job' });
+    const totalBytes = files.reduce((sum: number, file: { size?: number }) => sum + Math.max(0, Number(file.size) || 0), 0);
+    res.json(uploadJobs.createUploadJob(bucket, prefix, files.length, totalBytes));
+  } catch (error: any) {
+    const { message, s3Code, status } = getS3ErrorDetails(error);
+    res.status(status).json({ error: message, s3Code });
+  }
+});
+
+router.get('/:bucket/upload/jobs', async (req: Request, res: Response) => {
+  try {
+    const { bucket } = req.params;
+    if (!isValidBucketName(bucket)) return res.status(400).json({ error: 'Invalid bucket name' });
+    assertBucketAllowed(bucket);
+    res.json({ jobs: uploadJobs.listUploadJobs(bucket) });
+  } catch (error: any) {
+    const { message, s3Code, status } = getS3ErrorDetails(error);
+    res.status(status).json({ error: message, s3Code });
+  }
+});
+
+router.post('/:bucket/upload/jobs/:jobId/fail', async (req: Request, res: Response) => {
+  uploadJobs.failUploadJob(req.params.jobId);
+  res.json({ success: true });
+});
+
 router.post('/:bucket/upload', upload.array('files'), async (req: Request, res: Response) => {
   const files = (req.files as Express.Multer.File[]) || [];
 
@@ -237,6 +321,8 @@ router.post('/:bucket/upload', upload.array('files'), async (req: Request, res: 
     assertBucketAllowed(bucket);
 
     const prefix = (req.body.prefix as string) || '';
+    const jobId = typeof req.body.jobId === 'string' ? req.body.jobId : undefined;
+    const fileIndex = Number.parseInt(req.body.fileIndex, 10);
 
     if (!files || files.length === 0) {
       return res.status(400).json({ error: 'No files provided' });
@@ -253,10 +339,13 @@ router.post('/:bucket/upload', upload.array('files'), async (req: Request, res: 
     }
 
     const names = files.map((file, index) => renamedNames?.[index] || file.originalname);
+    if (jobId && files.length === 1 && Number.isInteger(fileIndex)) uploadJobs.startUploadFile(jobId, fileIndex);
     const results = await uploadParts(bucket, prefix, files, names);
+    if (jobId && files.length === 1 && Number.isInteger(fileIndex)) uploadJobs.completeUploadFile(jobId, fileIndex, files[0].size);
 
     res.json({ success: true, uploaded: results });
   } catch (error: any) {
+    if (typeof req.body?.jobId === 'string') uploadJobs.failUploadFile(req.body.jobId, Number.parseInt(req.body.fileIndex, 10));
     console.error('Error uploading files:', error);
     const { message, s3Code, status } = getS3ErrorDetails(error);
     res.status(status).json({ error: message, s3Code });

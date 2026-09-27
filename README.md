@@ -133,6 +133,26 @@ The service worker caches only same-origin static output. `/api` is never
 intercepted — object data is per-session, so a cached listing would show one
 user's buckets to the next, and would make a delete appear to undo itself.
 
+Large files use browser-to-S3 multipart uploads. Configure the S3-compatible
+provider's CORS policy for the app origin, allowing `PUT` and exposing `ETag`:
+
+```json
+[
+  {
+    "AllowedOrigins": ["https://your-s3-explorer.example"],
+    "AllowedMethods": ["PUT", "GET", "HEAD"],
+    "AllowedHeaders": ["*"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+Without `ETag`, the browser cannot prove which parts reached storage and the
+multipart upload cannot be completed safely. The S3 endpoint must also be
+reachable by the browser over HTTPS; the app server's private Docker hostname
+cannot be used as a presigned-URL endpoint.
+
 #### Railway (Recommended)
 
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/s3-explorer)
