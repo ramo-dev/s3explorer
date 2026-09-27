@@ -30,6 +30,18 @@ export interface UploadJobSummary {
   updatedAt: number;
 }
 
+export interface UploadProgressState {
+  percent: number;
+  uploadedBytes: number;
+  totalBytes: number;
+  speedBps: number;
+  etaSeconds: number | null;
+  multipart?: {
+    completedParts: number;
+    totalParts: number;
+  };
+}
+
 export interface ContextMenuState {
   x: number;
   y: number;

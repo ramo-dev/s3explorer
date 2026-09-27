@@ -9,7 +9,7 @@ import { DashboardSidebar } from '@/components/layout/dashboard/DashboardSidebar
 import { Toast } from '@/components/shared/Toast';
 import { UploadProgress } from './UploadProgress';
 import { BatchActionsBar } from './BatchActionsBar';
-import type { Bucket, ContextMenuState, S3Object, SortDirection, SortField, ToastState, UploadJobSummary } from '@/types';
+import type { Bucket, ContextMenuState, S3Object, SortDirection, SortField, ToastState, UploadJobSummary, UploadProgressState } from '@/types';
 import type { FileFilters } from '@/lib/fileFilters';
 import type { Connection } from '@/api';
 import { getFileName } from '@/lib/fileUtils';
@@ -30,7 +30,7 @@ interface AuthenticatedFilesShellProps {
   toast: ToastState | null;
   error: string | null;
   uploading: boolean;
-  uploadProgress: number;
+  uploadProgress: UploadProgressState;
   uploadJobs: UploadJobSummary[];
   isDragActive: boolean;
   networkStatus: { isOnline: boolean; isBackendReachable: boolean };
@@ -118,6 +118,7 @@ interface AuthenticatedFilesShellProps {
   onHandleConnectionChange: () => void;
   onHandleDownloadCurrentFolder: () => void;
   onLoadObjects: () => void;
+  onCancelUpload: () => void;
 }
 
 export function AuthenticatedFilesShell({
@@ -135,7 +136,7 @@ export function AuthenticatedFilesShell({
   onHandleSort, onHandleSortWithDirection, onHandleFiltersChange, onLoadMore, onHandleDownload, onHandleDownloadZip,
   onHandleContextMenu, onHandleBatchPreview, onHandleBatchDownload, onHandleBatchDelete, onClearSelection,
   onSetBatchPreviewObjects, onHandleCreateBucket, onHandleCreateFolder, onHandleRename, onHandleDelete,
-  onHandleDeleteBucket, onHandleConnectionChange, onHandleDownloadCurrentFolder, onLoadObjects,
+  onHandleDeleteBucket, onHandleConnectionChange, onHandleDownloadCurrentFolder, onLoadObjects, onCancelUpload,
 }: AuthenticatedFilesShellProps) {
   const inputRef = fileInputRef as { current: HTMLInputElement | null };
   return (
@@ -159,7 +160,7 @@ export function AuthenticatedFilesShell({
           onNavigateToBreadcrumb={i => onSetCurrentPath(breadcrumbs.slice(0, i + 1).join('/') + '/')}
           onRefresh={onRefresh} onNewFolder={onNewFolder} onUpload={onDrop} onUploadFolder={onUploadFolder} onOpenCommandPalette={onOpenCommandPalette} />
         <ErrorBanner error={error} onDismiss={() => onSetError(null)} />
-        <UploadProgress uploading={uploading} progress={uploadProgress} jobs={uploadJobs} />
+        <UploadProgress uploading={uploading} progress={uploadProgress} jobs={uploadJobs} onCancel={onCancelUpload} />
         <DropOverlay isDragActive={isDragActive} />
         <FilesMainContent activeConnection={!!activeConnection} selectedBucket={selectedBucket} searching={searching}
           searchActive={!!searchResults} displayObjects={displayObjects} sourceObjects={sourceObjects} loading={loading}
@@ -186,7 +187,7 @@ export function AuthenticatedFilesShell({
         setSearchQuery={onSearchChange} handleGoBack={onGoBack} loadObjects={onLoadObjects} setFileInput={() => fileInputRef.current?.click()}
         handleDownloadCurrentFolder={onHandleDownloadCurrentFolder} previewObject={previewObject} batchPreviewObjects={batchPreviewObjects}
         setBatchPreviewObjects={onSetBatchPreviewObjects} batchPreviewStartIndex={batchPreviewStartIndex} />
-      <input key={uploadProgress} ref={node => { inputRef.current = node; }} type="file" multiple className="hidden" onChange={e => e.target.files && onDrop(Array.from(e.target.files))} />
+       <input key={uploadProgress.percent} ref={node => { inputRef.current = node; }} type="file" multiple className="hidden" onChange={e => e.target.files && onDrop(Array.from(e.target.files))} />
       {!activeConnection && <Suspense fallback={null}><WelcomeMessage onConfigure={onOpenConnections} /></Suspense>}
       <OfflineIndicator isOnline={networkStatus.isOnline} isBackendReachable={networkStatus.isBackendReachable} />
       <BatchActionsBar selectedCount={selectedKeys.size} previewableCount={previewableSelectedCount} downloadMode={batchDownloadMode}

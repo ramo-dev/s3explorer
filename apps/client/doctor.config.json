@@ -1,0 +1,10 @@
+{
+  "$schema": "https://react.doctor/schema/config.json",
+  "ignore": {
+    "files": [
+      "src/components/ui/**",
+      "scripts/legacy-usage.mjs"
+    ]
+  },
+  "blocking": "error"
+}

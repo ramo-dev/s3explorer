@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { login, setup } from './auth';
 import { listObjects, searchObjects } from './objects';
@@ -8,8 +8,21 @@ export const queryKeys = {
   objectSearch: (bucket: string, query: string) => ["objects", "search", bucket, query] as const,
 };
 
-export const useLogin = () => useMutation({ mutationFn: ({ password, rememberMe }: { password: string; rememberMe: boolean }) => login(password, rememberMe) });
-export const useSetup = () => useMutation({ mutationFn: ({ password, sessionSecret }: { password: string; sessionSecret?: string }) => setup(password, sessionSecret) });
+export const useLogin = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ password, rememberMe }: { password: string; rememberMe: boolean }) => login(password, rememberMe),
+    onSuccess: () => queryClient.clear(),
+  });
+};
+
+export const useSetup = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ password, sessionSecret }: { password: string; sessionSecret?: string }) => setup(password, sessionSecret),
+    onSuccess: () => queryClient.clear(),
+  });
+};
 
 /**
  * Search is page data, but its cache key and transport policy belong at the

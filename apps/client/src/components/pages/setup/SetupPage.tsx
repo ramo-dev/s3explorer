@@ -155,6 +155,7 @@ export function SetupPage({ onSetupComplete }: SetupPageProps) {
             <div className="mt-8 py-4 opacity-50 hover:opacity-100 transition-opacity duration-200">
                 <a
                     href="https://github.com/subratomandal"
+                    aria-label="Open the project author’s GitHub profile"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"

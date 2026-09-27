@@ -98,10 +98,9 @@ export function CommandPalette({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-100 flex items-start justify-center pt-[15vh] p-4 bg-black/70 backdrop-blur-[8px] animate-fade-in" onClick={onClose}>
+    <div className="fixed inset-0 z-100 flex items-start justify-center pt-[15vh] p-4 bg-black/70 backdrop-blur-[8px] animate-fade-in">
       <div
         className="w-full max-w-lg bg-popover text-popover-foreground border border-border rounded-lg shadow-2xl overflow-hidden animate-in fade-in-0 zoom-in-95"
-        onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
           <Search className="size-5 text-muted-foreground shrink-0" />

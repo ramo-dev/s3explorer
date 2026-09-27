@@ -22,14 +22,14 @@ export function ConnectionList({ connections, loading, resetForm, setView, handl
                 {loading ? (
                     <div className="flex items-center justify-center py-8 text-muted-foreground"><Spinner className="size-5 mr-2" />Loading...</div>
                 ) : connections.length === 0 ? (
-                    <button type="button" onClick={() => { resetForm(); setView('form'); }} className="group w-full cursor-pointer rounded-md border border-dashed border-border bg-card py-6 text-center transition-all hover:border-primary/30 hover:bg-primary/5">
+                    <button type="button" onClick={() => { resetForm(); setView('form'); }} className="group w-full cursor-pointer rounded-md border border-dashed border-border bg-card py-6 text-center transition-[border-color,background-color] hover:border-primary/30 hover:bg-primary/5">
                         <Server className="size-8 mx-auto mb-2 text-muted-foreground transition-colors group-hover:text-primary" />
                         <p className="text-sm font-medium text-muted-foreground transition-colors group-hover:text-primary">No connections</p>
                         <p className="mt-1 text-xs text-muted-foreground">Click to add your first connection</p>
                     </button>
                 ) : (
                     connections.map(conn => (
-                        <div key={conn.id} className={cn('group relative flex items-center justify-between overflow-hidden rounded-md bg-muted transition-all', conn.isActive ? 'ring-1 ring-primary' : 'hover:bg-primary/5')}>
+                        <div key={conn.id} className={cn('group relative flex items-center justify-between overflow-hidden rounded-md bg-muted transition-[background-color,box-shadow]', conn.isActive ? 'ring-1 ring-primary' : 'hover:bg-primary/5')}>
                             <button type="button" onClick={() => handleActivate(conn.id)} className="flex min-w-0 flex-1 items-center gap-3 py-3 pl-4 pr-2 text-left">
                                 <div className={cn('flex size-9 shrink-0 items-center justify-center rounded-md transition-colors', conn.isActive ? 'bg-primary/20 text-primary' : 'bg-accent text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary')}><Server className="size-4" /></div>
                                 <div className="min-w-0 flex-1">
@@ -40,7 +40,7 @@ export function ConnectionList({ connections, loading, resetForm, setView, handl
                             <div className="flex shrink-0 items-center gap-1 pr-3">
                                 <Button variant="ghost" size="icon-sm" onClick={() => startEdit(conn)} className="text-muted-foreground hover:text-primary" aria-label={`Edit ${conn.name}`}><Pencil className="size-4" /></Button>
                                 <Button variant="ghost" size="icon-sm" onClick={() => setDeleteConfirm(conn.id)} className="text-muted-foreground hover:text-destructive" aria-label={`Delete ${conn.name}`}><Trash2 className="size-4" /></Button>
-                                <ChevronRight className="ml-1 size-4 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
+                                <ChevronRight className="ml-1 size-4 text-muted-foreground transition-[color,transform] group-hover:translate-x-0.5 group-hover:text-primary" />
                             </div>
                         </div>
                     ))

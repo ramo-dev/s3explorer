@@ -44,6 +44,7 @@ export function ConnectionForm({
                   <div className="relative">
                     <select
                       id="conn-provider"
+                      aria-label="Provider"
                       value={selectedProvider}
                       onChange={(e) => handleProviderChange(e.target.value)}
                       className={SELECT_CLASSES}
@@ -86,7 +87,8 @@ export function ConnectionForm({
                     </div>
                     {customRegion ? (
                       <Input
-                        id="conn-region"
+                         id="conn-region"
+                         aria-label="Region"
                         type="text"
                         value={form.region || ''}
                         onChange={(e) => { setRegionTouched(true); setForm({ ...form, region: e.target.value }); }}
@@ -102,6 +104,7 @@ export function ConnectionForm({
                       <div className="relative">
                         <select
                           id="conn-region"
+                          aria-label="Region"
                           value={form.region}
                           onChange={(e) => handleRegionChange(e.target.value)}
                           className={cn(SELECT_CLASSES, 'truncate')}

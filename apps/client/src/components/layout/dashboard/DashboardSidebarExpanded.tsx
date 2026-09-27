@@ -74,7 +74,7 @@ export function DashboardSidebarExpanded({
                     type="button"
                     onClick={onNavigateHome}
                     tabIndex={collapsed ? -1 : 0}
-                    className="group flex cursor-pointer items-center gap-2 transition-all duration-300 hover:opacity-80"
+                    className="group flex cursor-pointer items-center gap-2 transition-opacity duration-300 hover:opacity-80"
                 >
                     <img src="/logo.svg" alt="S3 Explorer logo" className="size-6 logo-spin logo-themed" />
                     <span className="whitespace-nowrap text-sm font-semibold">S3 Explorer</span>

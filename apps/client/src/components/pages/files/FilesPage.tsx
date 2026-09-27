@@ -7,7 +7,7 @@ import { useObjectListing, useObjectSearch } from '@/api/queries';
 import { useUrlLocation } from '@/hooks/useLocationUrl';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useUploadJobs } from '@/hooks/useUploadJobs';
-import type { Bucket, S3Object, SortDirection, SortField, ToastState } from '@/types';
+import type { Bucket, S3Object, SortDirection, SortField, ToastState, UploadProgressState } from '@/types';
 import { useSelection } from './hooks/useSelection';
 import { useViewPrefs } from './hooks/useViewPrefs';
 import { useDialogs } from './hooks/useDialogs';
@@ -48,7 +48,7 @@ export default function FilesPage() {
     setFilters,
   } = useUrlLocation();
   const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgressState>({ percent: 0, uploadedBytes: 0, totalBytes: 0, speedBps: 0, etaSeconds: null });
   // Do not compete with multipart PUTs for connections while a file is uploading.
   // Local upload progress remains available; the job list refreshes when the upload ends.
   const uploadJobs = useUploadJobs(authenticated === true, !uploading);
@@ -175,7 +175,7 @@ export default function FilesPage() {
     setSearchQuery('');
     showToastMsg(`Bucket "${selectedBucket}" is not available on this connection`, 'error');
   }, [bucketsLoaded, buckets, selectedBucket, setSelectedBucket, setCurrentPath, setSearchQuery, showToastMsg]);
-  const onDrop = useFileUpload({
+  const { onDrop, cancelUpload } = useFileUpload({
     bucket: selectedBucket,
     path: currentPath,
     objects,
@@ -246,7 +246,7 @@ export default function FilesPage() {
     searchQuery={searchQuery} loading={loading} sidebarOpen={sidebarOpen} sidebarCollapsed={sidebarCollapsed}
     theme={theme} toast={toast} error={error} uploading={uploading} uploadProgress={uploadProgress}
     uploadJobs={uploadJobs}
-    isDragActive={isDragActive} networkStatus={networkStatus} filters={filters} viewMode={viewMode}
+     isDragActive={isDragActive} networkStatus={networkStatus} filters={filters} viewMode={viewMode}
     selectedKeys={selectedKeys} displayObjects={displayObjects} sourceObjects={sourceObjects} searchResults={searchResults}
     searching={searching} sortField={sortField} sortDirection={sortDirection} hasMore={hasMore} loadingMore={loadingMore}
     breadcrumbs={breadcrumbs} contextMenu={contextMenu} showNewBucket={showNewBucket} showNewFolder={showNewFolder}
@@ -276,6 +276,6 @@ export default function FilesPage() {
     onSetBatchPreviewObjects={setBatchPreviewObjects} onHandleCreateBucket={handleCreateBucket}
     onHandleCreateFolder={handleCreateFolder} onHandleRename={handleRename} onHandleDelete={handleDelete}
     onHandleDeleteBucket={handleDeleteBucket} onHandleConnectionChange={handleConnectionChange}
-    onHandleDownloadCurrentFolder={handleDownloadCurrentFolder} onLoadObjects={loadObjects}
+     onHandleDownloadCurrentFolder={handleDownloadCurrentFolder} onLoadObjects={loadObjects} onCancelUpload={cancelUpload}
   />;
 }
