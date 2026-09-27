@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { listUploadJobs } from '@/api/objects';
 import type { UploadJobSummary } from '@/types';
 
-export function useUploadJobs(enabled: boolean): UploadJobSummary[] {
+const UPLOAD_JOB_POLL_INTERVAL = 5000;
+
+export function useUploadJobs(enabled: boolean, pollingEnabled = true): UploadJobSummary[] {
   const [jobs, setJobs] = useState<UploadJobSummary[]>([]);
 
   useEffect(() => {
@@ -20,13 +22,14 @@ export function useUploadJobs(enabled: boolean): UploadJobSummary[] {
         // Upload progress is informational; the upload itself has its own error path.
       }
     };
+    if (!pollingEnabled) return () => { cancelled = true; };
     void refresh();
-    const timer = window.setInterval(() => void refresh(), 1500);
+    const timer = window.setInterval(() => void refresh(), UPLOAD_JOB_POLL_INTERVAL);
     return () => {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [enabled]);
+  }, [enabled, pollingEnabled]);
 
   return jobs;
 }

@@ -49,7 +49,9 @@ export default function FilesPage() {
   } = useUrlLocation();
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const uploadJobs = useUploadJobs(authenticated === true);
+  // Do not compete with multipart PUTs for connections while a file is uploading.
+  // Local upload progress remains available; the job list refreshes when the upload ends.
+  const uploadJobs = useUploadJobs(authenticated === true, !uploading);
   const [preparingZip, setPreparingZip] = useState(false);
   const [toast, setToast] = useState<ToastState | null>(null);
   const { sidebarOpen, setSidebarOpen, sidebarCollapsed, setSidebarCollapsed, theme, toggleTheme } = useViewPrefs();
