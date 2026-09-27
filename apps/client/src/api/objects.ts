@@ -30,7 +30,13 @@ export async function createZipDownload(bucket: string, prefix: string, objects:
 
 export const getZipUrl = (bucket: string, token: string) => apiUrl(`/objects/${encodeURIComponent(bucket)}/zip/${token}`);
 
-export function uploadFiles(bucket: string, prefix: string, files: File[], renamedNames?: Map<File, string>, onProgress?: (percent: number) => void) {
+export interface UploadResult { key: string; size: number; }
+
+export function getUploadPath(file: File): string {
+  return (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name;
+}
+
+export function uploadFiles(bucket: string, prefix: string, files: File[], renamedNames?: Map<File, string>, onProgress?: (percent: number) => void): Promise<UploadResult[]> {
   const formData = new FormData();
   formData.append('prefix', prefix);
   if (renamedNames?.size) {
@@ -39,14 +45,20 @@ export function uploadFiles(bucket: string, prefix: string, files: File[], renam
     formData.append('names', JSON.stringify(names));
   } else for (const file of files) formData.append('files', file);
 
-  return new Promise<void>((resolve, reject) => {
+  return new Promise<UploadResult[]>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', apiUrl(`/objects/${encodeURIComponent(bucket)}/upload`));
     xhr.withCredentials = true;
     xhr.timeout = API_TIMEOUTS.UPLOAD;
     xhr.upload.onprogress = event => { if (onProgress && event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100)); };
     xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) { resolve(); return; }
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const data = JSON.parse(xhr.responseText) as { uploaded?: UploadResult[] };
+          resolve(data.uploaded ?? []);
+        } catch { resolve([]); }
+        return;
+      }
       try {
         const data = JSON.parse(xhr.responseText);
         const error = new ApiError(data.error || data.message || data.Message || 'Upload failed', xhr.status, undefined, data.s3Code || data.code || data.Code);

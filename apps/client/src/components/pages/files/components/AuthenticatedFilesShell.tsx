@@ -63,6 +63,7 @@ interface AuthenticatedFilesShellProps {
   getRootProps: () => HTMLAttributes<HTMLElement>;
   getInputProps: () => InputHTMLAttributes<HTMLInputElement>;
   onDrop: (files: File[]) => void;
+  onUploadFolder: (files: File[]) => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   onLogout: () => void;
   onToggleTheme: () => void;
@@ -124,7 +125,7 @@ export function AuthenticatedFilesShell({
   displayObjects, sourceObjects, searchResults, searching, sortField, sortDirection, hasMore, loadingMore,
   breadcrumbs, contextMenu, showNewBucket, showNewFolder, showRename, showDelete, showDeleteBucket,
   showConnectionManager, showCommandPalette, newName, previewObject, batchPreviewObjects, batchPreviewStartIndex,
-  preparingZip, batchDownloadMode, previewableSelectedCount, getRootProps, getInputProps, onDrop, fileInputRef,
+  preparingZip, batchDownloadMode, previewableSelectedCount, getRootProps, getInputProps, onDrop, onUploadFolder, fileInputRef,
   onLogout, onToggleTheme, onSetSidebarOpen, onSetSidebarCollapsed, onSearchChange, onBucketSelect, onNewBucket,
   onDeleteBucket, onNavigateHome, onOpenConnections, onGoBack, onNavigate, onSetCurrentPath, onSetViewMode,
   onRefresh, onNewFolder, onOpenCommandPalette, onSetError, onSetToast, onSetPreviewObject, onSetContextMenu,
@@ -155,7 +156,7 @@ export function AuthenticatedFilesShell({
         <DashboardHeader selectedBucket={selectedBucket} currentPath={currentPath} loading={loading}
           onOpenSidebar={() => onSetSidebarOpen(true)} onGoBack={onGoBack} onNavigateToRoot={() => onSetCurrentPath('')}
           onNavigateToBreadcrumb={i => onSetCurrentPath(breadcrumbs.slice(0, i + 1).join('/') + '/')}
-          onRefresh={onRefresh} onNewFolder={onNewFolder} onUpload={onDrop} onOpenCommandPalette={onOpenCommandPalette} />
+          onRefresh={onRefresh} onNewFolder={onNewFolder} onUpload={onDrop} onUploadFolder={onUploadFolder} onOpenCommandPalette={onOpenCommandPalette} />
         <ErrorBanner error={error} onDismiss={() => onSetError(null)} />
         <UploadProgress uploading={uploading} progress={uploadProgress} />
         <DropOverlay isDragActive={isDragActive} />

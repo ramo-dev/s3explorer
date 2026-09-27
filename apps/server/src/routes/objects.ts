@@ -1,9 +1,9 @@
 import { type Request, type Response, Router } from 'express';
 import fs from 'fs';
 import multer from 'multer';
-import path from 'path';
 import * as s3 from '../services/s3.js';
 import * as zip from '../services/zip.js';
+import { uploadParts } from '../services/upload.js';
 import { assertBucketAllowed } from '../utils/pinnedBucket.js';
 import { isValidBucketName } from '../utils/validation.js';
 
@@ -22,12 +22,6 @@ const upload = multer({
   dest: UPLOAD_TEMP_DIR,
   limits: { fileSize: MAX_FILE_SIZE }
 });
-
-// Sanitize filename - prevent path traversal, preserve unicode
-function sanitizeFilename(filename: string): string {
-  // Strip path components, then only remove truly dangerous characters
-  return path.basename(filename).replace(/[<>:"|?*\x00-\x1f]/g, '_');
-}
 
 // Validate object key -- the ../ check blocks path traversal attacks that could
 // escape the intended prefix and access/overwrite arbitrary keys in the bucket.
@@ -258,21 +252,8 @@ router.post('/:bucket/upload', upload.array('files'), async (req: Request, res: 
       }
     }
 
-    const results = [];
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      // Use renamed name if provided, otherwise use original
-      const originalName = renamedNames && renamedNames[i] ? renamedNames[i] : file.originalname;
-      const safeName = sanitizeFilename(originalName);
-      const key = prefix ? `${prefix}${safeName}` : safeName;
-
-      if (!isValidObjectKey(key)) {
-        continue; // Skip invalid keys
-      }
-
-      await s3.uploadFile(bucket, key, file.path, file.size, file.mimetype);
-      results.push({ key, size: file.size });
-    }
+    const names = files.map((file, index) => renamedNames?.[index] || file.originalname);
+    const results = await uploadParts(bucket, prefix, files, names);
 
     res.json({ success: true, uploaded: results });
   } catch (error: any) {

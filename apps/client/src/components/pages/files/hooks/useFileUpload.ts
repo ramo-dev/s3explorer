@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { uploadFiles } from '@/api/objects';
+import { getUploadPath, uploadFiles } from '@/api/objects';
 import { getFileName } from '@/lib/fileUtils';
 import { resolveUploadConflicts } from '@/lib/uniqueName';
 import type { S3Object } from '@/types';
@@ -44,16 +44,18 @@ export function useFileUpload({
       setUploadProgress(0);
       const existingNames = new Set(objects.filter(obj => !obj.isFolder).map(obj => getFileName(obj.key)));
       const renamedFiles = resolveUploadConflicts(acceptedFiles, existingNames);
-      const renamedCount = Array.from(renamedFiles.entries()).filter(([file, name]) => file.name !== name).length;
+      const renamedCount = Array.from(renamedFiles.entries()).filter(([file, name]) => getUploadPath(file) !== name).length;
 
-      await uploadFiles(bucket, path, acceptedFiles, renamedFiles, setUploadProgress);
+      const uploaded = await uploadFiles(bucket, path, acceptedFiles, renamedFiles, setUploadProgress);
       setUploadProgress(100);
       setTimeout(() => {
         setUploading(false);
         setUploadProgress(0);
         void loadObjects();
         const suffix = renamedCount > 0 ? ` (${renamedCount} renamed)` : '';
-        showToast(`${acceptedFiles.length} file${acceptedFiles.length > 1 ? 's' : ''} uploaded${suffix}`);
+        showToast(uploaded.length === 0
+          ? 'No files found in upload'
+          : `${uploaded.length} file${uploaded.length > 1 ? 's' : ''} uploaded${suffix}`);
       }, 400);
     } catch (error) {
       setUploadProgress(0);

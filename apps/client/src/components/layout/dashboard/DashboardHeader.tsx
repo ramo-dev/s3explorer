@@ -1,5 +1,5 @@
 import { cn } from 'cn';
-import { ChevronLeft, FolderPlus, Menu, RefreshCw, Search } from 'lucide-react';
+import { ChevronLeft, FolderOpen, FolderPlus, Menu, RefreshCw, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
     Breadcrumb,
@@ -22,6 +22,7 @@ interface HeaderProps {
     onRefresh: () => void;
     onNewFolder: () => void;
     onUpload: (files: File[]) => void;
+    onUploadFolder: (files: File[]) => void;
     onOpenCommandPalette?: () => void;
 }
 
@@ -36,6 +37,7 @@ export function DashboardHeader({
     onRefresh,
     onNewFolder,
     onUpload,
+    onUploadFolder,
     onOpenCommandPalette,
 }: HeaderProps) {
     const [isSpinning, setIsSpinning] = useState(false);
@@ -216,6 +218,26 @@ export function DashboardHeader({
                             className="sr-only"
                             onChange={e => e.target.files && onUpload(Array.from(e.target.files))}
                             aria-label="Select files to upload"
+                        />
+                        <Button
+                            render={<label htmlFor="header-folder-upload" />}
+                            nativeButton={false}
+                            size="sm"
+                            variant="secondary"
+                            className="cursor-pointer"
+                            aria-label="Upload a folder"
+                        >
+                            <FolderOpen className="size-5 sm:size-4" aria-hidden="true" />
+                            <span className="hidden md:inline">Folder</span>
+                        </Button>
+                        <input
+                            id="header-folder-upload"
+                            type="file"
+                            multiple
+                            {...({ webkitdirectory: '', directory: '' } as Record<string, string>)}
+                            className="sr-only"
+                            onChange={e => e.target.files && onUploadFolder(Array.from(e.target.files))}
+                            aria-label="Select a folder to upload"
                         />
                     </>
                 )}

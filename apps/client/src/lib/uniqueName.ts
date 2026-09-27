@@ -78,6 +78,11 @@ export function resolveUploadConflicts(
     const usedNames = new Set(existingNames);
 
     for (const file of files) {
+        const relativePath = (file as File & { webkitRelativePath?: string }).webkitRelativePath;
+        if (relativePath) {
+            result.set(file, relativePath);
+            continue;
+        }
         const uniqueName = generateUniqueName(file.name, usedNames, false);
         result.set(file, uniqueName);
         usedNames.add(uniqueName.toLowerCase());

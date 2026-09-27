@@ -249,7 +249,8 @@ export default function FilesPage() {
     showConnectionManager={showConnectionManager} showCommandPalette={showCommandPalette} newName={newName}
     previewObject={previewObject} batchPreviewObjects={batchPreviewObjects} batchPreviewStartIndex={batchPreviewStartIndex}
     preparingZip={preparingZip} batchDownloadMode={batchDownloadMode} previewableSelectedCount={previewableSelectedCount}
-    getRootProps={getRootProps} getInputProps={getInputProps} onDrop={onDrop} fileInputRef={fileInputRef}
+     getRootProps={getRootProps} getInputProps={getInputProps} onDrop={onDrop} fileInputRef={fileInputRef}
+     onUploadFolder={onDrop}
     onLogout={handleLogout} onToggleTheme={toggleTheme} onSetSidebarOpen={setSidebarOpen}
     onSetSidebarCollapsed={setSidebarCollapsed} onSearchChange={setSearchQuery}
     onBucketSelect={name => { setSelectedBucket(name); setCurrentPath(''); setSidebarOpen(false); setSearchQuery(''); }}

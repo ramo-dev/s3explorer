@@ -34,11 +34,26 @@
       margin: 0;
       padding: 0;
     }
+    #pwa-splash {
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      gap: 1rem;
+      color: #fff;
+      font: 600 1rem system-ui, sans-serif;
+    }
+    #pwa-splash img { width: 5rem; height: 5rem; }
+    #pwa-splash span { opacity: .7; }
   </style>
 </head>
 
 <body>
-  <div id="root"></div>
+  <div id="root">
+    <div id="pwa-splash" role="status" aria-label="Loading S3 Explorer">
+      <img src="/icons/pwa-192.png" alt="" />
+      <span>S3 Explorer</span>
+    </div>
+  </div>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 
